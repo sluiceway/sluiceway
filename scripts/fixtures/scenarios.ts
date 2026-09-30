@@ -780,19 +780,13 @@ ${OUTPUTS}`,
     steps: [driftCheck("network", "ghost", { exit: "nonzero" }, "drift", "text")],
   },
   {
-    name: "locked",
+    name: "preview-locked",
     description:
-      "network:dev while another update of it holds its lock in the file backend, written here as `pulumi up` leaves it while it runs. The preview takes no lock and works. The drift check takes one, cannot get it, and fails with exit code 255 and no document.",
+      "The preview while a deploy holds the stack lock of the file backend. It takes no lock and runs, so a preview never finds a Pulumi stack busy there (record 0117).",
     steps: [
       init("network", "dev"),
-      {
-        kind: "backend",
-        file: ".pulumi/locks/organization/network/dev/00000000-0000-4000-8000-000000000000.json",
-        content:
-          '{"username":"someone","hostname":"elsewhere","pid":4242,"timestamp":"2026-09-21T06:00:00Z"}',
-      },
+      HELD_LOCK,
       preview("network", "dev", { exit: "zero", ops: ["create"] }),
-      driftCheck("network", "dev", { exit: "nonzero" }, "drift", "text"),
     ],
   },
   {
