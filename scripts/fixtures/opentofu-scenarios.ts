@@ -402,7 +402,7 @@ export function familyScenarios(c: FamilyCommands, binary: string): Scenario[] {
     {
       name: "state-locked",
       description:
-        "network:dev while another deploy of it runs and holds the state lock: the plan cannot take the lock and fails, with the diagnostic \"Error acquiring the state lock\" in its JSON log.",
+        'network:dev while another deploy of it runs and holds the state lock: the plan cannot take the lock and fails, with the diagnostic "Error acquiring the state lock" in its JSON log.',
       steps: [
         init(c, DEV),
         { kind: "write", file: "network/slow.tf", content: SLOW_RESOURCE },

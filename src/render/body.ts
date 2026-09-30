@@ -41,6 +41,7 @@ import { type AttributionLines, INDENT, type Row, type RowOptions, renderRow } f
 import { scanRunningLine } from "./scan-running.ts";
 import { minuteAt, trailMinute, yearIn, zoneLine } from "./time.ts";
 import {
+  busyLine,
   DRIFTED_LINE,
   DRY,
   INSTRUCTION_LINE,
@@ -226,6 +227,9 @@ function picture(
   crates: Crates,
   signs: DestroySigns,
   actionRef: string,
+  // How many stacks are busy (record 0117). No picture shows it, so the alt
+  // text says it after everything else.
+  busy: number,
 ): string[] {
   let name: string = state;
   let alt: string;
@@ -236,6 +240,7 @@ function picture(
   } else {
     alt = ALT[state];
   }
+  if (busy > 0) alt += busy === 1 ? ", 1 stack is busy" : `, ${busy} stacks are busy`;
   const file = (theme: string) => mascotUrl(actionRef, `${name}-${theme}.svg`);
   return [
     '<p align="center">',
@@ -270,6 +275,9 @@ function countsLine(counts: CountsLineNumbers, dots: boolean, zeros = true): str
       ? [`${dot("preview-failed", previewFailed)}${previewFailed} preview failed`]
       : []),
     ...(shown(inSync) ? [`${dot("in-sync", inSync)}${inSync} in sync`] : []),
+    // Only when a stack is busy (record 0117), so every other dashboard
+    // keeps its counts line byte for byte.
+    ...(counts.busy > 0 ? [`${dot("busy", counts.busy)}${counts.busy} busy`] : []),
   ];
   // The warning keeps its `:warning:` and gets no dot. It says "delete or
   // replace", as the alert under Pending and the rows' own lines do.
@@ -528,6 +536,15 @@ function previewFailedSection(facts: DashboardFacts): string[] {
   return ["## Preview failed", PREVIEW_FAILED_LINE, blocks(previewFailed)];
 }
 
+// The stacks whose lock another update held when the scan ran (record 0117).
+// Right under the preview failures, wherever the layout puts those, and never
+// turned off either: a row that was not previewed is one a person must see.
+function busySection(facts: DashboardFacts): string[] {
+  const { busy } = facts;
+  if (busy.length === 0) return [];
+  return ["## Busy", busyLine(busy.length), blocks(busy)];
+}
+
 // In sync rows are calm and sit in a fold. One with a failure line is not
 // calm: it is listed open, above the fold, at every setting. Its state stays
 // in sync. The stacks left out with a reason get a fold of their own under
@@ -636,7 +653,13 @@ export function renderBody(input: BodyInput): string {
   const scanLines = [scan, running, runWaits, ...freezes].filter((line) => line !== undefined);
   if (input.personality)
     out.push(
-      picture(facts.headerState, facts.crates, facts.signs, input.actionRef).join("\n"),
+      picture(
+        facts.headerState,
+        facts.crates,
+        facts.signs,
+        input.actionRef,
+        facts.counts.busy,
+      ).join("\n"),
       '<div align="center">',
       counts,
       ...scanLines,
@@ -665,7 +688,7 @@ export function renderBody(input: BodyInput): string {
     updates: () => updatesSection(input),
     pending: () => pendingSection(input, facts, layout),
     drifted: () => driftedSection(input, facts, layout, off),
-    previewFailed: () => previewFailedSection(facts),
+    previewFailed: () => [...previewFailedSection(facts), ...busySection(facts)],
     inSync: () => inSyncSection(input, facts, layout, off),
     recentlyDeployed: () => recentSection(input),
   };

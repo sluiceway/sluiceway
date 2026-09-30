@@ -69,6 +69,13 @@ export const WAITING_ON_CHECKS_LINE =
 export const READ_ONLY_LINE =
   "This dashboard is read only, so rows have no boxes and nothing deploys from here. Rows get their boxes when `dashboard.readOnly` comes out of `sluiceway.yaml`.";
 
+// Above the busy rows (record 0117). Plain, and it says what happens next.
+export function busyLine(count: number): string {
+  return count === 1
+    ? "Another update held the lock of this stack when the scan ran, so it was not previewed. The next scan previews it."
+    : "Another update held the lock of each of these stacks when the scan ran, so they were not previewed. The next scan previews them.";
+}
+
 export const PREVIEW_FAILED_LINE =
   "These stacks could not be previewed, so they cannot be deployed from here until a scan succeeds.";
 
