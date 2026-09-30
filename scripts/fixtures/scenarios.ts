@@ -780,6 +780,22 @@ ${OUTPUTS}`,
     steps: [driftCheck("network", "ghost", { exit: "nonzero" }, "drift", "text")],
   },
   {
+    name: "locked",
+    description:
+      "network:dev while another update of it holds its lock in the file backend, written here as `pulumi up` leaves it while it runs. The preview takes no lock and works. The drift check takes one, cannot get it, and fails with exit code 255 and no document.",
+    steps: [
+      init("network", "dev"),
+      {
+        kind: "backend",
+        file: ".pulumi/locks/organization/network/dev/00000000-0000-4000-8000-000000000000.json",
+        content:
+          '{"username":"someone","hostname":"elsewhere","pid":4242,"timestamp":"2026-09-21T06:00:00Z"}',
+      },
+      preview("network", "dev", { exit: "zero", ops: ["create"] }),
+      driftCheck("network", "dev", { exit: "nonzero" }, "drift", "text"),
+    ],
+  },
+  {
     name: "stack-list",
     description:
       "The stacks the backend holds for network/, as the check with backend: true asks for them (record 0074): network:dev was made, network:prod was not, and a stack of app/ in the same backend is not listed.",
