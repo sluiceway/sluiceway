@@ -69,7 +69,14 @@ for (const version of VERSIONS) {
     test("the preview runs while a deploy holds the stack lock", async () => {
       const result = await previewWith(NETWORK_DEV, replay(version, "preview-locked"));
       expect(result.ok).toBe(true);
-      expect(changesOf(result).map((change) => change.op)).toEqual(["create", "create"]);
+      // The four resources of a stack that was never deployed, as in the
+      // scenario new-stack.
+      expect(changesOf(result).map((change) => change.op)).toEqual([
+        "create",
+        "create",
+        "create",
+        "create",
+      ]);
     });
 
     // The tool also creates the root stack resource, pulumi:pulumi:Stack. That
