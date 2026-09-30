@@ -96,6 +96,7 @@ export function previewSummary(
     // create (onboarding log, hurdle 9). The glob is built from the stack id,
     // a name Sluiceway derived from the repo's files (record 0022).
     ignore: result.reason.kind === "stack-not-found" ? globOf(stackId) : undefined,
+    ...(isBusy(result) ? { busy: true } : {}),
   };
 }
 

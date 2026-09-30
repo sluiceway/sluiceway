@@ -49,7 +49,7 @@ import {
   NO_DESTROY_NOTE,
   NOTHING_FROM_THE_CODE,
   NOTHING_TO_DEPLOY,
-  PREVIEW_FAILED_LINE,
+  previewFailedLine,
   READ_ONLY_LINE,
   shortenedNote,
   WAITING_ON_CHECKS_LINE,
@@ -161,9 +161,9 @@ const ACTION_URL = `https://github.com/${ACTION_REPO}`;
 
 // Plain and fixed per state. The pending, failing, deploying and queued
 // pictures show how many stacks wait, so their alt texts say the same number
-// in words (records 0047, 0066 and 0075).
-const ALT: Record<Exclude<HeaderState, "pending">, string> = {
-  failing: "Sluiceway: something failed",
+// in words (records 0047, 0066 and 0075). The failing one names what failed
+// (record 0118): `failingAlt` below.
+const ALT: Record<Exclude<HeaderState, "pending" | "failing">, string> = {
   deploying: "Sluiceway: deploying",
   queued: "Sluiceway: queued behind dependencies",
   drift: "Sluiceway: something changed outside the code",
@@ -183,9 +183,30 @@ type Counted = (typeof COUNTED)[number];
 const isCounted = (state: HeaderState): state is Counted =>
   (COUNTED as readonly string[]).includes(state);
 
-function countedAlt(state: Counted, crates: Crates): string {
+// What failed, and how many (record 0118): the preview failures and the rows
+// with a failure line, in the numbers of the counts line. "Something failed"
+// read like a broken repo where one preview of many had failed. The picture's
+// own label stays general: one file serves any number of failures.
+export interface FailedCounts {
+  previews: number;
+  deploys: number;
+}
+
+function failingAlt({ previews, deploys }: FailedCounts): string {
+  const some = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
+  if (previews > 0 && deploys > 0) {
+    return `Sluiceway: ${some(previews, "preview")} and ${some(deploys, "deploy")} failed`;
+  }
+  if (previews > 0) return `Sluiceway: ${some(previews, "preview")} failed`;
+  if (deploys > 0) return `Sluiceway: ${some(deploys, "deploy")} failed`;
+  // No writer gives a failing header without a failure.
+  return "Sluiceway: something failed";
+}
+
+function countedAlt(state: Counted, crates: Crates, failed: FailedCounts): string {
   if (state === "pending") return `Sluiceway: ${pendingWords(crates)}`;
-  return crates === 0 ? ALT[state] : `${ALT[state]}, ${pendingWords(crates)}`;
+  const alt = state === "failing" ? failingAlt(failed) : ALT[state];
+  return crates === 0 ? alt : `${alt}, ${pendingWords(crates)}`;
 }
 
 // The name part and the fact the signs add, for the states whose picture can
@@ -230,13 +251,15 @@ function picture(
   // How many stacks are busy (record 0117). No picture shows it, so the alt
   // text says it after everything else.
   busy: number,
+  // What failed, for the alt text of a failing header (record 0118).
+  failed: FailedCounts,
 ): string[] {
   let name: string = state;
   let alt: string;
   if (isCounted(state)) {
     const { suffix, fact } = signed(state, signs);
     name = `${state}-${crates}${suffix}`;
-    alt = `${countedAlt(state, crates)}${fact}`;
+    alt = `${countedAlt(state, crates, failed)}${fact}`;
   } else {
     alt = ALT[state];
   }
@@ -533,7 +556,7 @@ function driftedSection(
 function previewFailedSection(facts: DashboardFacts): string[] {
   const { previewFailed } = facts;
   if (previewFailed.length === 0) return [];
-  return ["## Preview failed", PREVIEW_FAILED_LINE, blocks(previewFailed)];
+  return ["## Preview failed", previewFailedLine(previewFailed.length), blocks(previewFailed)];
 }
 
 // The stacks whose lock another update held when the scan ran (record 0117).
@@ -653,13 +676,10 @@ export function renderBody(input: BodyInput): string {
   const scanLines = [scan, running, runWaits, ...freezes].filter((line) => line !== undefined);
   if (input.personality)
     out.push(
-      picture(
-        facts.headerState,
-        facts.crates,
-        facts.signs,
-        input.actionRef,
-        facts.counts.busy,
-      ).join("\n"),
+      picture(facts.headerState, facts.crates, facts.signs, input.actionRef, facts.counts.busy, {
+        previews: facts.counts.previewFailed,
+        deploys: facts.counts.failedDeploys,
+      }).join("\n"),
       '<div align="center">',
       counts,
       ...scanLines,
