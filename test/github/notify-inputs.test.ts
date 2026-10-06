@@ -75,15 +75,6 @@ describe("the channels", () => {
     }
   });
 
-  test("a Telegram topic without the token and the chat is a warning", () => {
-    const read = readNotifyTargets(inputs({ "telegram-thread-id": "56" }));
-    expect(read.targets).toEqual({});
-    expect(read.problems).toEqual([
-      'The "telegram-thread-id" input is set and "telegram-bot-token" and "telegram-chat-id" are not, so nothing is sent to Telegram.',
-    ]);
-    expect(read.secrets).toEqual([]);
-  });
-
   test("a Slack address that is not https is refused, and the value is never quoted", () => {
     const read = readNotifyTargets(inputs({ "slack-webhook-url": "hooks.slack.com/SECRET" }));
     expect(read.targets).toEqual({});

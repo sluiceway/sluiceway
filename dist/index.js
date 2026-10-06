@@ -27702,8 +27702,6 @@ function readNotifyTargets(getInput2) {
     } else {
       targets.telegram = { token, chatId, ...threadId ? { threadId: Number(threadId) } : {} };
     }
-  } else if (threadId) {
-    problems.push('The "telegram-thread-id" input is set and "telegram-bot-token" and "telegram-chat-id" are not, so nothing is sent to Telegram.');
   }
   if (webhook) {
     if (/^https?:\/\//.test(webhook))
