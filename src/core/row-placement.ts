@@ -64,6 +64,8 @@ export interface PreviewedStack {
   // When the preview started. A deploy that ended after it is fresher than
   // the preview (record 0004).
   startedAt: Date;
+  // The scan ran a drift check of the stack, and it failed (record 0120).
+  driftFailed?: boolean | undefined;
 }
 
 // What the scan knows of the updates waiting to merge (record 0054): nothing
@@ -295,6 +297,7 @@ export function placeRows(so: ScanSoFar, late: LateRead): RowsAtLateRead {
       const fresh = previewRow(id, mine.result, links, failureLine(so.repoUrl, id, fact, outside), {
         toolDiffInLog: logDiff,
         pageUrl: so.pageUrls.get(id),
+        driftUnchecked: mine.driftFailed,
       });
       // A value the row does not show differed between this preview and the
       // live row's, at the commit of the live body's last scan (record 0102).

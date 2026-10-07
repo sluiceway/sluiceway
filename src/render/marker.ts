@@ -155,6 +155,10 @@ export interface RowFacts {
   // cache like `failed`: the header, the counts line and the sections tell a
   // busy row from a preview failure by it, and nothing is decided from it.
   busy?: boolean | undefined;
+  // The stack's drift check failed (record 0120): the row says `drift not
+  // checked`. A display cache like `busy`: not in the hash, and nothing is
+  // decided from it but whether a push checks the stack's drift again.
+  driftUnchecked?: boolean | undefined;
 }
 
 // A list of stack ids in one marker value, split on commas. An id is
@@ -294,6 +298,7 @@ export function rowMarker(facts: RowFacts): string {
   }
   if (facts.behind && facts.behind.length > 0) pairs.push(["behind", encodeIds(facts.behind)]);
   if (facts.busy) pairs.push(["busy", "true"]);
+  if (facts.driftUnchecked) pairs.push(["drift-check", "failed"]);
   return marker("row", pairs);
 }
 
@@ -410,6 +415,9 @@ export type ParsedRow =
       // Busy, not failed, on a row of the state `preview-failed` (record
       // 0117). Absent on any other row.
       busy?: true;
+      // The drift check of the stack failed (record 0120). Absent when it
+      // did not, or when none ran.
+      driftUnchecked?: true;
       ticked: boolean;
       text: string;
     }
@@ -614,6 +622,7 @@ export function parseDashboard(body: string): ParsedDashboard {
       ...(state === "preview-failed" && pairs.get("busy") === "true"
         ? { busy: true as const }
         : {}),
+      ...(pairs.get("drift-check") === "failed" ? { driftUnchecked: true as const } : {}),
       ticked: match[1] === "x" || match[1] === "X",
       text,
     });

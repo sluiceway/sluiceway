@@ -1020,7 +1020,11 @@ async function makePlan(
     ? await findDashboard(context.github, config.dashboard.label)
     : undefined;
   const live = dashboard && parseDashboard(dashboard.body);
-  for (const row of live?.rows ?? []) if (row.known && row.drift) knownDrift.add(row.stackId);
+  // A row whose drift check failed is checked again too (record 0120), so its
+  // note does not go with a push that did not look.
+  for (const row of live?.rows ?? []) {
+    if (row.known && (row.drift || row.driftUnchecked)) knownDrift.add(row.stackId);
+  }
   const base = comparisonBase(context.event, live, MARKER_VERSION, afterMerge);
   if (base.kind !== "compare") return full(base);
 
@@ -1374,17 +1378,19 @@ async function previewAll(
       milliseconds = now().getTime() - started;
     }
     result = withoutDocument(result);
+    // A failed check is a quiet note on the row (record 0120).
+    const driftFailed = drift !== undefined && !drift.ok;
     // The second run of the tool takes the same slot of the pool and the same
     // time limit, and only a pending stack gets one (record 0048).
     if (!logDiff || !result.ok || result.diff.changes.length === 0) {
-      return { id, result, startedAt, milliseconds, drift, ...tested };
+      return { id, result, startedAt, milliseconds, drift, driftFailed, ...tested };
     }
     const toolDiffStarted = now().getTime();
     const toolDiff = await adapter.toolDiff(configured.stack, options);
     log.info(
       `Ran the tool's own diff of ${logGroupTitle(id)} in ${seconds(now().getTime() - toolDiffStarted)}${toolDiff.ok ? "" : `: ${previewFailureText(toolDiff.reason)}`}.`,
     );
-    return { id, result, startedAt, milliseconds, toolDiff, drift, ...tested };
+    return { id, result, startedAt, milliseconds, toolDiff, drift, driftFailed, ...tested };
   };
   const previewed = await runPool(stacks, context.pool.size, (configured) =>
     previewOne(configured, false),
@@ -1602,7 +1608,7 @@ function logResults(context: ScanContext, previewed: Previewed[]): void {
     // (record 0055).
     if (drift !== undefined && !drift.ok) {
       log.warning(
-        `The drift check of ${logGroupTitle(id)} failed: ${previewFailureText(drift.reason)}. Its row shows the preview alone.`,
+        `The drift check of ${logGroupTitle(id)} failed: ${previewFailureText(drift.reason)}. Its row says drift not checked.`,
         "Drift check failed",
       );
     }
