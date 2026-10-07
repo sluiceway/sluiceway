@@ -79,6 +79,18 @@ describe("action.yml", () => {
     expect(action.inputs["job-id"]?.required).toBe(false);
   });
 
+  // The runner reads an expression in a description as one, and fails to
+  // load the action on a function it does not allow there, such as
+  // cancelled(). The smoke job of CI saw it on 2026-10-07.
+  test("holds no expression in a description", () => {
+    for (const [name, input] of Object.entries(action.inputs)) {
+      expect({ name, expression: (input?.description ?? "").includes("${{") }).toEqual({
+        name,
+        expression: false,
+      });
+    }
+  });
+
   // Record 0120: like the job's id, the status of the job before the step
   // reaches it as the default of an input.
   test("takes the status of the job from job.status", () => {
