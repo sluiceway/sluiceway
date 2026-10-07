@@ -115,7 +115,7 @@ The workflow deploys it through a fresh preview and the hash check, and the dash
 
 It does not wait for the deploy, and it never says a deploy went out: your workflow deploys the stack on your own runner, and the dashboard row says how it ended. Follow it there, or with `sluiceway stack`.
 
-A stack with `dependsOn`, a phase or a deploy window is ticked the same way, and the app judges it by the action's rules, as `resolve` judges a tick on the dashboard. When it has to wait for the stacks it depends on, for its window or for the end of a deploy freeze, its record is queued, and a later run of `resolve` starts it, under a deployment record of its own:
+A stack with `dependsOn`, a phase, a deploy window or deploy on merge is ticked the same way, and the app judges it by the action's rules, as `resolve` judges a tick on the dashboard. When it has to wait for the stacks it depends on, for its window or for the end of a deploy freeze, its record is queued, and a later run of `resolve` starts it, under a deployment record of its own:
 
 ```
 Asked GitHub to deploy apps/api:prod once network:prod went out. Its deployment record is queued, and resolve starts it then.
