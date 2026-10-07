@@ -228,6 +228,16 @@ describe("a run that failed", () => {
     expect(said).toEqual([{ why: "config", file: "sluiceway.yml" }]);
   });
 
+  test("a problem in the config that auto mode hands on as the cause names the file too", async () => {
+    said.length = 0;
+    const problem = new ConfigError(["something is wrong"]);
+    const wrapped = new Error(`scan: ${problem.message}`, { cause: problem });
+    await expect(
+      guarded("auto", "", async () => Promise.reject(wrapped), failure("push")),
+    ).rejects.toBe(wrapped);
+    expect(said).toEqual([{ why: "config", file: "sluiceway.yaml" }]);
+  });
+
   test("any other error writes nothing, and a problem in the config of a pull request neither", async () => {
     said.length = 0;
     await expect(

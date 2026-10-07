@@ -115,8 +115,15 @@ export async function guarded(
   try {
     await work();
   } catch (error) {
-    if (error instanceof ConfigError && writes)
-      await failure.say({ why: "config", file: error.file });
+    // Auto mode hands a problem in the config on as the cause of its own
+    // error, after the other modes it ran.
+    const problem =
+      error instanceof ConfigError
+        ? error
+        : error instanceof Error && error.cause instanceof ConfigError
+          ? error.cause
+          : undefined;
+    if (problem && writes) await failure.say({ why: "config", file: problem.file });
     throw error;
   }
 }
