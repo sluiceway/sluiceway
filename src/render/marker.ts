@@ -72,6 +72,17 @@ export interface RootFacts {
   // act, carried by every other writer, and taken away by the scan's own
   // write of the body at the end.
   scanRunning?: ScanRunningFacts | undefined;
+  // The runs of the workflow that failed since the scan before (record 0119).
+  // Only a scan counts them, and every other writer carries them.
+  failedRuns?: FailedRunsFacts | undefined;
+}
+
+// How many runs failed since the scan before, the newest of them, and when it
+// started (ISO 8601, UTC).
+export interface FailedRunsFacts {
+  run: string;
+  at: string;
+  count: number;
 }
 
 // The run that waited longest, when it started waiting (ISO 8601, UTC), and
@@ -247,6 +258,13 @@ export function rootMarker(facts: RootFacts): string {
       ["scan-running-since", facts.scanRunning.since],
     );
   }
+  if (facts.failedRuns !== undefined) {
+    pairs.push(
+      ["runs-failed", String(facts.failedRuns.count)],
+      ["runs-failed-newest", facts.failedRuns.run],
+      ["runs-failed-at", facts.failedRuns.at],
+    );
+  }
   return marker("dashboard", pairs);
 }
 
@@ -345,6 +363,7 @@ export interface ParsedRoot {
   fullScanRun?: string | undefined;
   waitingRun?: WaitingRunFacts | undefined;
   scanRunning?: ScanRunningFacts | undefined;
+  failedRuns?: FailedRunsFacts | undefined;
 }
 
 // A row block: every line from the one that ends in the open marker through
@@ -462,7 +481,18 @@ function readRoot(line: string): ParsedRoot | undefined {
     fullScanRun: pairs.get("full-scan-run"),
     waitingRun: readWaitingRun(pairs),
     scanRunning: readScanRunning(pairs),
+    failedRuns: readFailedRuns(pairs),
   };
+}
+
+// All three keys, with a whole number, or no failed runs.
+function readFailedRuns(pairs: Map<string, string>): FailedRunsFacts | undefined {
+  const count = pairs.get("runs-failed");
+  const run = pairs.get("runs-failed-newest");
+  const at = pairs.get("runs-failed-at");
+  if (count === undefined || run === undefined || at === undefined) return undefined;
+  if (!/^\d+$/.test(count)) return undefined;
+  return { run, at, count: Number(count) };
 }
 
 // Both the run and the time, or no running scan.

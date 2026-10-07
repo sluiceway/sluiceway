@@ -119,6 +119,7 @@ import { bulkSweepText } from "../render/bulk-box.ts";
 import { whereFilesBelong } from "../render/check.ts";
 import { costLine } from "../render/cost.ts";
 import { COUNT_DOT, HEADER_DOT } from "../render/dots.ts";
+import { failedRunsLogLine } from "../render/failed-run.ts";
 import { dashboardSearchUrl, type RunLinks, runLinks, runUrl } from "../render/links.ts";
 import {
   diffLogLines,
@@ -371,6 +372,7 @@ async function scanning(context: ScanContext, report: ScanReport): Promise<void>
   const at = startedAt.toISOString();
   const links = runLinks(context);
   let waitingRunFacts: { found: WaitingRunFacts | undefined } | undefined;
+  let endedRuns: { runs: RunOfTheWorkflow[] | undefined } | undefined;
 
   // Config and discovery come first and cost no preview. An error in either
   // fails the job before the tool or GitHub is touched (record 0012). Every
@@ -545,6 +547,9 @@ async function scanning(context: ScanContext, report: ScanReport): Promise<void>
     // Once a job, after the previews, so a run that started meanwhile is not
     // named (record 0086).
     if (waitingRunFacts === undefined) waitingRunFacts = await findWaitingRun(context, at);
+    // Once a job too, and counted at the late read against the scan the live
+    // body shows (record 0119).
+    if (endedRuns === undefined) endedRuns = await readEndedRuns(context);
     const writer: DashboardWriter = {
       github: context.github,
       runId: context.runId,
@@ -582,6 +587,7 @@ async function scanning(context: ScanContext, report: ScanReport): Promise<void>
         runId: context.runId,
         at,
         waitingRun: waitingRunFacts.found,
+        endedRuns: endedRuns.runs,
       },
       repoUrl: context.repoUrl,
       links,
@@ -706,6 +712,8 @@ async function scanning(context: ScanContext, report: ScanReport): Promise<void>
   }
 
   reportDashboard(context, written, lastPlaced);
+  const runsFailed = parseDashboard(written.body).root?.failedRuns;
+  if (runsFailed) log.info(failedRunsLogLine(runsFailed, context.workflow, context.repoUrl));
   for (const [id, wait] of [...waitsOnMerge].sort(([a], [b]) => byCodeUnit(a, b))) {
     log.info(onMergeLogLine(id, wait));
   }
@@ -943,6 +951,22 @@ async function findWaitingRun(
   const found = waitingRun(runs, new Date(at), context.runId);
   if (found) context.log.info(waitingRunLogLine(found, at, context.workflow, context.repoUrl));
   return { found };
+}
+
+// The runs of this workflow that ended, for the line about the ones that
+// failed since the scan before (record 0119). Like the waiting run, it is a
+// line and nothing else: a read that fails leaves it out and the scan goes on.
+async function readEndedRuns(
+  context: ScanContext,
+): Promise<{ runs: RunOfTheWorkflow[] | undefined }> {
+  try {
+    return { runs: await context.github.listEndedRuns(context.workflow) };
+  } catch (error) {
+    context.log.info(
+      `The runs of ${context.workflow} that ended could not be read: ${error instanceof Error ? error.message : error}. The dashboard says nothing about runs that failed since the scan before this time. The scan job needs the permission \`actions: read\` (record 0119).`,
+    );
+    return { runs: undefined };
+  }
 }
 
 // The other half of the orphan tick rule (record 0025): whether a run that an
