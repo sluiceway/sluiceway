@@ -79,6 +79,13 @@ describe("action.yml", () => {
     expect(action.inputs["job-id"]?.required).toBe(false);
   });
 
+  // Record 0119: like the job's id, the status of the job before the step
+  // reaches it as the default of an input.
+  test("takes the status of the job from job.status", () => {
+    expect(action.inputs["job-status"]?.default).toBe("${{ job.status }}");
+    expect(action.inputs["job-status"]?.required).toBe(false);
+  });
+
   // Slice 5.12 (record 0077): a step without a mode picks its own.
   test("the mode input is optional, auto by default, and names every mode", () => {
     expect(action.inputs.mode?.required).toBe(false);
@@ -114,7 +121,8 @@ describe("action.yml", () => {
   });
 
   // Record 0035: the five inputs of v1, `job-id` of record 0044, the four
-  // channels of record 0078, and the env file of record 0100.
+  // channels of record 0078, the env file of record 0100, and `job-status` of
+  // record 0119.
   test("declares only the inputs the decision records fix", () => {
     expect(Object.keys(action.inputs).sort()).toEqual([
       "backend",
@@ -125,6 +133,7 @@ describe("action.yml", () => {
       "env-file",
       "github-token",
       "job-id",
+      "job-status",
       "mode",
       "preview-timeout",
       "pull-request-preview",
