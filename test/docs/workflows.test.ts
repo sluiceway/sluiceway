@@ -228,7 +228,7 @@ describe("the one-step workflow", () => {
     }
   });
 
-  // Record 0119: but the Sluiceway step's one condition, which lets it run
+  // Record 0120: but the Sluiceway step's one condition, which lets it run
   // after a step above failed and say so on the dashboard.
   test.each(oneStep)("has no if:, no needs: and no mode: $where", ({ workflow }) => {
     const steps = Object.values(workflow.jobs).flatMap((job) => job.steps);

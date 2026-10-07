@@ -3,7 +3,7 @@ import { scan } from "../../src/modes/scan.ts";
 import { parseDashboard } from "../../src/render/marker.ts";
 import { change, dashboardBody, harness, pending, REPO_URL, tableAdapter } from "./harness.ts";
 
-// Record 0119: a scan counts the runs of its own workflow that failed since
+// Record 0120: a scan counts the runs of its own workflow that failed since
 // the scan the dashboard showed before, and says so under the scan line. The
 // harness's first scan runs at 2026-09-21 06:00 UTC as run 4242.
 
@@ -58,7 +58,7 @@ describe("the runs that failed since the scan before", () => {
       count: 3,
     });
     expect(log.lines).toContain(
-      `3 runs of sluiceway.yml failed since the scan before this one. The dashboard says so under the scan line until the next scan (record 0119): ${REPO_URL}/actions/runs/903`,
+      `3 runs of sluiceway.yml failed since the scan before this one. The dashboard says so under the scan line until the next scan (record 0120): ${REPO_URL}/actions/runs/903`,
     );
     expect(github.requests.slice(before).filter((one) => one === "listEndedRuns")).toHaveLength(1);
   });

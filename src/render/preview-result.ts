@@ -31,7 +31,7 @@ export function previewRow(
   options: {
     toolDiffInLog?: boolean | undefined;
     pageUrl?: string | undefined;
-    // The drift check of the stack failed (record 0120).
+    // The drift check of the stack failed (record 0121).
     driftUnchecked?: boolean | undefined;
   } = {},
 ): Row {
@@ -49,7 +49,7 @@ export function previewRow(
   // What the preview read from the program's stack references (record 0059).
   const read = result.dependencies?.stackIds ?? [];
   const dependsOn = read.length === 0 ? {} : { dependsOn: read };
-  // A row whose drift check failed says so, quietly (record 0120).
+  // A row whose drift check failed says so, quietly (record 0121).
   const unchecked = options.driftUnchecked ? { driftUnchecked: true } : {};
   if (result.diff.changes.length === 0) {
     // Nothing to deploy from the code, and drift found (record 0055). The

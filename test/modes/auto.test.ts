@@ -285,7 +285,7 @@ describe("auto mode on its other events", () => {
     await expect(auto(strict)).rejects.toThrow("A preview failed");
   });
 
-  // Record 0119: the step says on the dashboard that the config has a
+  // Record 0120: the step says on the dashboard that the config has a
   // problem, so the problem has to reach it as itself.
   test("a problem in the config ends the step red, with the problem as the cause", async () => {
     const h = await scanned(TABLE);

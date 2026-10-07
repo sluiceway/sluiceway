@@ -40,7 +40,7 @@ export interface FailureLine {
 export interface PendingRow {
   state: "pending";
   diff: Diff;
-  // The drift check of the stack failed (record 0120).
+  // The drift check of the stack failed (record 0121).
   driftUnchecked?: boolean | undefined;
   // The diff hash of `diff`. It covers the whole diff whatever the row shows.
   hash: string;
@@ -157,7 +157,7 @@ export interface InSyncRow {
   state: "in-sync";
   stackId: string;
   failure?: FailureLine | undefined;
-  // The drift check of the stack failed (record 0120).
+  // The drift check of the stack failed (record 0121).
   driftUnchecked?: boolean | undefined;
   dependsOn?: readonly string[] | undefined;
 }
@@ -761,7 +761,7 @@ function deployingRow(row: DeployingRow, options: RowOptions): string[] {
   return lines;
 }
 
-// What a row says when its drift check failed (record 0120). Quiet on
+// What a row says when its drift check failed (record 0121). Quiet on
 // purpose: the stack is not known to have drifted, only not known not to.
 export const DRIFT_NOT_CHECKED = "drift not checked";
 

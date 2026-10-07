@@ -1,6 +1,6 @@
 # The dashboard says a scan is running, from the scan's first write
 
-> Amended by 0119: the line of a run that failed before Sluiceway ran, or on a problem in its config, sits right under the scan line, above this one. The scan's first write draws the body without it.
+> Amended by 0120: the line of a run that failed before Sluiceway ran, or on a problem in its config, sits right under the scan line, above this one. The scan's first write draws the body without it.
 >
 > Amends 0004 (a scan writes the body twice: once before its previews with no row of its own, once at the end), 0009 (two optional keys on the root marker), 0017 (five requests more per scan), 0025 (the rescan box is written back unticked at the scan's first write), 0029 (a line under the scan line) and 0086 (that line sits under this one). Built as slice 5.43, for issue 252.
 

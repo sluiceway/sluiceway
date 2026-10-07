@@ -64,7 +64,7 @@ export interface PreviewedStack {
   // When the preview started. A deploy that ended after it is fresher than
   // the preview (record 0004).
   startedAt: Date;
-  // The scan ran a drift check of the stack, and it failed (record 0120).
+  // The scan ran a drift check of the stack, and it failed (record 0121).
   driftFailed?: boolean | undefined;
 }
 
@@ -85,7 +85,7 @@ export interface ScanSoFar {
   // The root marker a scan writes, less the keys of a full scan.
   // `waitingRun`: a run of the workflow that waits for a runner, as the scan
   // found it (record 0086). `endedRuns`: the runs of the workflow that ended,
-  // as the scan read them, when it could (record 0119).
+  // as the scan read them, when it could (record 0120).
   scan: {
     sha: string;
     runId: string;
@@ -395,7 +395,7 @@ export function placeRows(so: ScanSoFar, late: LateRead): RowsAtLateRead {
         // Only the scan lists the runs, so it writes what it found, or no line.
         waitingRun: so.scan.waitingRun,
         // The runs that failed since the scan the live body shows (record
-        // 0119), so a retry that reads another scan's body counts from it.
+        // 0120), so a retry that reads another scan's body counts from it.
         failedRuns:
           so.scan.endedRuns === undefined
             ? undefined

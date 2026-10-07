@@ -1,5 +1,5 @@
 // The words about runs of the dashboard's own workflow that failed (record
-// 0119). A run that fails before Sluiceway ran, or on a broken config, writes
+// 0120). A run that fails before Sluiceway ran, or on a broken config, writes
 // no scan, so the dashboard looked as fresh as the scan before it. Two lines
 // say so: one that the run itself puts right under the scan line, and one that
 // the next scan that works writes, with how many failed since the scan before.
@@ -38,7 +38,7 @@ export function failedRunsLogLine(
   repoUrl: string,
 ): string {
   const runs = facts.count === 1 ? "1 run" : `${facts.count} runs`;
-  return `${runs} of ${workflow} failed since the scan before this one. The dashboard says so under the scan line until the next scan (record 0119): ${runUrl(facts.run, repoUrl)}`;
+  return `${runs} of ${workflow} failed since the scan before this one. The dashboard says so under the scan line until the next scan (record 0120): ${runUrl(facts.run, repoUrl)}`;
 }
 
 // Why the run failed, as far as Sluiceway can tell: a step before its own

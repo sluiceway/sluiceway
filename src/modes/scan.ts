@@ -548,7 +548,7 @@ async function scanning(context: ScanContext, report: ScanReport): Promise<void>
     // named (record 0086).
     if (waitingRunFacts === undefined) waitingRunFacts = await findWaitingRun(context, at);
     // Once a job too, and counted at the late read against the scan the live
-    // body shows (record 0119).
+    // body shows (record 0120).
     if (endedRuns === undefined) endedRuns = await readEndedRuns(context);
     const writer: DashboardWriter = {
       github: context.github,
@@ -954,7 +954,7 @@ async function findWaitingRun(
 }
 
 // The runs of this workflow that ended, for the line about the ones that
-// failed since the scan before (record 0119). Like the waiting run, it is a
+// failed since the scan before (record 0120). Like the waiting run, it is a
 // line and nothing else: a read that fails leaves it out and the scan goes on.
 async function readEndedRuns(
   context: ScanContext,
@@ -963,7 +963,7 @@ async function readEndedRuns(
     return { runs: await context.github.listEndedRuns(context.workflow) };
   } catch (error) {
     context.log.info(
-      `The runs of ${context.workflow} that ended could not be read: ${error instanceof Error ? error.message : error}. The dashboard says nothing about runs that failed since the scan before this time. The scan job needs the permission \`actions: read\` (record 0119).`,
+      `The runs of ${context.workflow} that ended could not be read: ${error instanceof Error ? error.message : error}. The dashboard says nothing about runs that failed since the scan before this time. The scan job needs the permission \`actions: read\` (record 0120).`,
     );
     return { runs: undefined };
   }
@@ -1020,7 +1020,7 @@ async function makePlan(
     ? await findDashboard(context.github, config.dashboard.label)
     : undefined;
   const live = dashboard && parseDashboard(dashboard.body);
-  // A row whose drift check failed is checked again too (record 0120), so its
+  // A row whose drift check failed is checked again too (record 0121), so its
   // note does not go with a push that did not look.
   for (const row of live?.rows ?? []) {
     if (row.known && (row.drift || row.driftUnchecked)) knownDrift.add(row.stackId);
@@ -1378,7 +1378,7 @@ async function previewAll(
       milliseconds = now().getTime() - started;
     }
     result = withoutDocument(result);
-    // A failed check is a quiet note on the row (record 0120).
+    // A failed check is a quiet note on the row (record 0121).
     const driftFailed = drift !== undefined && !drift.ok;
     // The second run of the tool takes the same slot of the pool and the same
     // time limit, and only a pending stack gets one (record 0048).

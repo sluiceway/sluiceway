@@ -166,7 +166,7 @@ describe("the env-file input on a step that never runs the tool", () => {
   });
 });
 
-// Record 0119: a run that failed before Sluiceway ran, or on a problem in its
+// Record 0120: a run that failed before Sluiceway ran, or on a problem in its
 // config, says so on the dashboard.
 describe("a run that failed", () => {
   const said: unknown[] = [];

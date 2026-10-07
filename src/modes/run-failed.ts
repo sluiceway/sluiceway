@@ -1,5 +1,5 @@
 // A run that failed before Sluiceway ran, or on a problem in its config, puts
-// one line right under the scan line (record 0119). Without it the dashboard
+// one line right under the scan line (record 0120). Without it the dashboard
 // looked as fresh as the scan before, while no scan could run. The run has no
 // config it can trust, so it does not draw the body again: it splices the line
 // into the live body, finds the dashboard by the label it can still read, and
@@ -44,7 +44,7 @@ export async function sayRunFailed(context: RunFailedContext, why: WhyRunFailed)
     const dashboard = await findDashboard(context.github, settings.label);
     if (dashboard === undefined) {
       log.info(
-        `The dashboard could not say this run failed: there is no open dashboard with the label ${settings.label} (record 0119).`,
+        `The dashboard could not say this run failed: there is no open dashboard with the label ${settings.label} (record 0120).`,
       );
       return;
     }
@@ -56,13 +56,13 @@ export async function sayRunFailed(context: RunFailedContext, why: WhyRunFailed)
     });
     if (!spliced) {
       log.info(
-        "The dashboard could not say this run failed: its body is not one this version wrote, or has no scan line (record 0119).",
+        "The dashboard could not say this run failed: its body is not one this version wrote, or has no scan line (record 0120).",
       );
       return;
     }
   } catch (error) {
     log.info(
-      `The dashboard could not say this run failed: ${error instanceof Error ? error.message : error} (record 0119).`,
+      `The dashboard could not say this run failed: ${error instanceof Error ? error.message : error} (record 0120).`,
     );
     return;
   }
@@ -73,6 +73,6 @@ export async function sayRunFailed(context: RunFailedContext, why: WhyRunFailed)
       ? "until a run gets as far as Sluiceway"
       : `until a run reads ${why.file} again`;
   log.info(
-    `The dashboard says this run ${what}, under the scan line, ${until} (record 0119): ${context.repoUrl}/actions/runs/${urlPart(context.runId)}`,
+    `The dashboard says this run ${what}, under the scan line, ${until} (record 0120): ${context.repoUrl}/actions/runs/${urlPart(context.runId)}`,
   );
 }

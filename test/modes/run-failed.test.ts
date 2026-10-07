@@ -14,7 +14,7 @@ import {
   tableAdapter,
 } from "./harness.ts";
 
-// Record 0119: a run that fails before Sluiceway ran, or on a problem in its
+// Record 0120: a run that fails before Sluiceway ran, or on a problem in its
 // config, puts one line right under the scan line, and the next run that gets
 // as far as Sluiceway with a config it can read takes it away.
 
@@ -55,7 +55,7 @@ describe("a run that failed before Sluiceway ran", () => {
     expect(under(body)).toBe(STEP_LINE);
     expect(body.replace(`${STEP_LINE}\n\n`, "")).toBe(before);
     expect(setup.log.lines).toContain(
-      `The dashboard says this run failed before Sluiceway ran, under the scan line, until a run gets as far as Sluiceway (record 0119): ${REPO_URL}/actions/runs/7001`,
+      `The dashboard says this run failed before Sluiceway ran, under the scan line, until a run gets as far as Sluiceway (record 0120): ${REPO_URL}/actions/runs/7001`,
     );
   });
 
@@ -117,7 +117,7 @@ describe("what it never does", () => {
 
     expect(setup.github.requests).toEqual(["listIssues"]);
     expect(setup.log.lines).toContain(
-      "The dashboard could not say this run failed: there is no open dashboard with the label sluiceway (record 0119).",
+      "The dashboard could not say this run failed: there is no open dashboard with the label sluiceway (record 0120).",
     );
   });
 
@@ -130,7 +130,7 @@ describe("what it never does", () => {
     await sayRunFailed({ ...failing(setup), github: refusing }, { why: "step" });
 
     expect(setup.log.lines).toContain(
-      "The dashboard could not say this run failed: Bad credentials (record 0119).",
+      "The dashboard could not say this run failed: Bad credentials (record 0120).",
     );
   });
 });

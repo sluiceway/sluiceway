@@ -3,7 +3,7 @@ import { type BodyInput, renderBody } from "../../src/render/body.ts";
 import { failedRunsLine, runFailedLine, spliceRunFailed } from "../../src/render/failed-run.ts";
 import { parseDashboard, type RootFacts, rootMarker } from "../../src/render/marker.ts";
 
-// Record 0119: the runs of the dashboard's own workflow that failed since the
+// Record 0120: the runs of the dashboard's own workflow that failed since the
 // scan before get one line under the scan line, and a run that fails before
 // Sluiceway ran or on a broken config puts one line right under the scan line
 // itself. Written out by hand.

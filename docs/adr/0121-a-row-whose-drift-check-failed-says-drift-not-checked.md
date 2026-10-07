@@ -1,6 +1,6 @@
 # A row whose drift check failed says drift not checked
 
-> Amends 0055 (a failed drift check was a warning on the run and nothing on the row) and 0009 (one optional key on the row marker). Built as slice 5.55, with record 0119, for issue 293. Decided by the owner on 2026-10-07.
+> Amends 0055 (a failed drift check was a warning on the run and nothing on the row) and 0009 (one optional key on the row marker). Built as slice 5.56, with record 0120, for issue 293. Decided by the owner on 2026-10-07.
 
 Record 0055 decided that a drift check that fails leaves the row as the preview made it, with a warning on the run. In the homelab, two stacks fail their check on every scheduled scan, one on a provider error and one on an expired token, and their rows still say plain in sync. The glossary defines in sync as "no known drift", which is true, and it reads as "checked, and nothing drifted", which is not. The owner chose a quiet marker on the row over keeping 0055 as it was.
 

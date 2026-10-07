@@ -3,7 +3,7 @@ import { scan } from "../../src/modes/scan.ts";
 import { parseDashboard } from "../../src/render/marker.ts";
 import { change, dashboardBody, harness, inSync, pending, SHA, tableAdapter } from "./harness.ts";
 
-// Record 0120: a stack whose drift check failed says so on its row, quietly:
+// Record 0121: a stack whose drift check failed says so on its row, quietly:
 // `drift not checked`. No state, no hash, no box of its own. A push that
 // previews the stack checks it again, as it does a stack with known drift.
 

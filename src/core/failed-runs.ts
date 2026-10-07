@@ -1,5 +1,5 @@
 // The runs of the dashboard's own workflow that failed since the scan the
-// dashboard showed before (record 0119). A run that failed before Sluiceway
+// dashboard showed before (record 0120). A run that failed before Sluiceway
 // ran, or on a broken config, wrote nothing, so the dashboard looked as fresh
 // as the scan before it. The next scan that works says how many there were and
 // names the newest. It decides nothing.

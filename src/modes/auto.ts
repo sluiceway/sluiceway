@@ -145,7 +145,7 @@ export async function auto(context: AutoContext): Promise<void> {
   };
   // The first problem in the config, handed on as the cause of the step's
   // error, so the step can say on the dashboard that the config has one
-  // (record 0119).
+  // (record 0120).
   let configProblem: ConfigError | undefined;
   const attempt = async (what: string, run: () => Promise<void>): Promise<void> => {
     try {

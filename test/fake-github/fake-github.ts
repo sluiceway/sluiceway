@@ -601,7 +601,7 @@ export class FakeGitHub implements GitHubPort {
       .map((run) => ({ ...run }));
   }
 
-  // The runs that ended, with their conclusion (record 0119).
+  // The runs that ended, with their conclusion (record 0120).
   async listEndedRuns(workflow: string): Promise<RunOfTheWorkflow[]> {
     this.#count("listEndedRuns");
     if (this.#endedRunsFail !== undefined)

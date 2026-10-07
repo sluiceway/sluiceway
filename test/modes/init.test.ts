@@ -459,7 +459,7 @@ describe("the workflow init writes", () => {
       group: "sluiceway-${{ github.event.issue.number }}",
       queue: "max",
     });
-    // Record 0119: the one if: is the step's, so it runs after a step above
+    // Record 0120: the one if: is the step's, so it runs after a step above
     // failed and says so on the dashboard.
     // biome-ignore lint/suspicious/noTemplateCurlyInString: a GitHub expression, not a template.
     expect(text?.match(/if:.*/g)).toEqual(["if: ${{ !cancelled() }}"]);

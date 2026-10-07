@@ -5,7 +5,7 @@ type Octokit = ReturnType<typeof getOctokit>;
 
 // The call of the orphan tick sweep (record 0025), the one that finds a run
 // waiting for a runner (record 0086) and the one that counts the runs that
-// failed (record 0119) on real GitHub. As in octokit-port.ts, each is one call
+// failed (record 0120) on real GitHub. As in octokit-port.ts, each is one call
 // and a translation.
 export type RunCalls = Pick<GitHubPort, "listIssuesRuns" | "listQueuedRuns" | "listEndedRuns">;
 

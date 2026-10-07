@@ -72,7 +72,7 @@ export interface RootFacts {
   // act, carried by every other writer, and taken away by the scan's own
   // write of the body at the end.
   scanRunning?: ScanRunningFacts | undefined;
-  // The runs of the workflow that failed since the scan before (record 0119).
+  // The runs of the workflow that failed since the scan before (record 0120).
   // Only a scan counts them, and every other writer carries them.
   failedRuns?: FailedRunsFacts | undefined;
 }
@@ -155,7 +155,7 @@ export interface RowFacts {
   // cache like `failed`: the header, the counts line and the sections tell a
   // busy row from a preview failure by it, and nothing is decided from it.
   busy?: boolean | undefined;
-  // The stack's drift check failed (record 0120): the row says `drift not
+  // The stack's drift check failed (record 0121): the row says `drift not
   // checked`. A display cache like `busy`: not in the hash, and nothing is
   // decided from it but whether a push checks the stack's drift again.
   driftUnchecked?: boolean | undefined;
@@ -415,7 +415,7 @@ export type ParsedRow =
       // Busy, not failed, on a row of the state `preview-failed` (record
       // 0117). Absent on any other row.
       busy?: true;
-      // The drift check of the stack failed (record 0120). Absent when it
+      // The drift check of the stack failed (record 0121). Absent when it
       // did not, or when none ran.
       driftUnchecked?: true;
       ticked: boolean;

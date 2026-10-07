@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { parseDashboard, rowMarker } from "../../src/render/marker.ts";
 import { renderRow } from "../../src/render/row.ts";
 
-// Record 0120: the quiet note of a row whose drift check failed. Written out
+// Record 0121: the quiet note of a row whose drift check failed. Written out
 // by hand.
 
 describe("drift not checked", () => {

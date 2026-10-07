@@ -56,7 +56,7 @@ function read(file: string): string | undefined {
 }
 
 // The two settings a run that failed needs to put its line on the dashboard
-// (record 0119): the label that finds it and the zone of its time. From the
+// (record 0120): the label that finds it and the zone of its time. From the
 // config when it loads. When it does not, the two keys as the file writes
 // them, when they make sense, and the defaults for the rest. A run with a
 // broken config can trust nothing more.

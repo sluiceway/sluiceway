@@ -47,7 +47,7 @@ function wholeNumber<Fallback extends number | undefined>(
 }
 
 // The status of the job before this step, as `${{ job.status }}` gives it
-// (record 0119). Left out, the step runs as it always did. A value GitHub
+// (record 0120). Left out, the step runs as it always did. A value GitHub
 // never gives is refused, so a typo cannot make a step run after a failure.
 export function parseJobStatus(input: string): "success" | "failure" | "cancelled" | undefined {
   const value = input.trim();

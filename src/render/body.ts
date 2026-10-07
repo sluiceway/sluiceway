@@ -671,7 +671,7 @@ export function renderBody(input: BodyInput): string {
   // waits for a runner under that (records 0108 and 0086).
   const running = scanRunningLine(input.root, input.repoUrl, input.timeZone);
   const runWaits = waitingRunLine(input.root, input.repoUrl, input.timeZone);
-  // The runs that failed since the scan before, under them (record 0119).
+  // The runs that failed since the scan before, under them (record 0120).
   const runsFailed = failedRunsLine(input.root, input.repoUrl, input.timeZone);
   // A deploy freeze under them (record 0115): it lasts, where they come and
   // go, so the lines that come and go stay right under the scan line.

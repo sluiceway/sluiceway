@@ -90,7 +90,7 @@ describe("the queued runs of a workflow, over HTTP (record 0086)", () => {
   });
 });
 
-// Record 0119: the runs that ended, with how each ended, for the line about
+// Record 0120: the runs that ended, with how each ended, for the line about
 // runs that failed since the scan before.
 describe("the ended runs of a workflow, through the real port", () => {
   test("only runs that ended, newest first, with their conclusion, as the fake keeps them", async () => {

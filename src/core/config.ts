@@ -800,7 +800,7 @@ export class ConfigError extends Error {
   readonly issues: ConfigIssue[];
   readonly problems: string[];
   // The config file the problems are in. A run that fails on them names it on
-  // the dashboard (record 0119).
+  // the dashboard (record 0120).
   readonly file: string;
 
   // A string is a problem already in words, such as an adapter's. `file` is

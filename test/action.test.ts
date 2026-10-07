@@ -79,7 +79,7 @@ describe("action.yml", () => {
     expect(action.inputs["job-id"]?.required).toBe(false);
   });
 
-  // Record 0119: like the job's id, the status of the job before the step
+  // Record 0120: like the job's id, the status of the job before the step
   // reaches it as the default of an input.
   test("takes the status of the job from job.status", () => {
     expect(action.inputs["job-status"]?.default).toBe("${{ job.status }}");
@@ -122,7 +122,7 @@ describe("action.yml", () => {
 
   // Record 0035: the five inputs of v1, `job-id` of record 0044, the four
   // channels of record 0078, the env file of record 0100, and `job-status` of
-  // record 0119.
+  // record 0120.
   test("declares only the inputs the decision records fix", () => {
     expect(Object.keys(action.inputs).sort()).toEqual([
       "backend",

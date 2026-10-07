@@ -733,7 +733,7 @@ describe("the job of a narrowed scan", () => {
       "createCheckRun",
       // Record 0086: the queued runs of the workflow, once a job.
       "listQueuedRuns",
-      // Record 0119: the runs of the workflow that ended, once a job.
+      // Record 0120: the runs of the workflow that ended, once a job.
       "listEndedRuns",
       "listIssues",
       "getIssue",

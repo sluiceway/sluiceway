@@ -83,7 +83,7 @@ export async function run(
   return guarded(mode, getInput("job-status"), () => handlers[mode](directory), failure);
 }
 
-// What a run that failed needs (record 0119): the event that started it, and
+// What a run that failed needs (record 0120): the event that started it, and
 // the way to put its line on the dashboard.
 export interface RunFailure {
   event: string;
@@ -91,7 +91,7 @@ export interface RunFailure {
   log?: ((line: string) => void) | undefined;
 }
 
-// The step around the work of a mode (record 0119). A step that runs with
+// The step around the work of a mode (record 0120). A step that runs with
 // `if: ${{ !cancelled() }}` and `job-status: ${{ job.status }}` runs after an
 // earlier step failed too, and then does none of its work: it puts the line
 // on the dashboard and ends. A problem in the config fails the job as before,
@@ -107,7 +107,7 @@ export async function guarded(
   const writes = writesDashboard(mode, failure.event);
   if (jobStatus === "failure" || jobStatus === "cancelled") {
     failure.log?.(
-      `An earlier step of this job ${jobStatus === "failure" ? "failed" : "was cancelled"}, so this step does not run ${mode} mode (record 0119).`,
+      `An earlier step of this job ${jobStatus === "failure" ? "failed" : "was cancelled"}, so this step does not run ${mode} mode (record 0120).`,
     );
     if (jobStatus === "failure" && writes) await failure.say({ why: "step" });
     return;
@@ -152,7 +152,7 @@ function jobFailure(getInput: GetInput): RunFailure {
         );
       } catch (error) {
         log.info(
-          `The dashboard could not say this run failed: ${error instanceof Error ? error.message : error} (record 0119).`,
+          `The dashboard could not say this run failed: ${error instanceof Error ? error.message : error} (record 0120).`,
         );
       }
     },

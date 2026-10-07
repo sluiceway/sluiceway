@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { failedRuns } from "../../src/core/failed-runs.ts";
 import type { RunOfTheWorkflow } from "../../src/core/waiting-run.ts";
 
-// Record 0119: a scan counts the runs of its own workflow that failed since
+// Record 0120: a scan counts the runs of its own workflow that failed since
 // the scan the dashboard showed before it, and names the newest.
 
 const PREVIOUS = "2026-10-05T10:00:00Z";

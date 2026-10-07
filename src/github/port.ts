@@ -222,7 +222,7 @@ export interface GitHubPort {
   listQueuedRuns(workflow: string): Promise<RunOfTheWorkflow[]>;
 
   // The newest 100 runs of one workflow that ended, whatever started them,
-  // newest first, each with its conclusion (record 0119). `workflow` is the
+  // newest first, each with its conclusion (record 0120). `workflow` is the
   // file name, as for `listIssuesRuns`. Needs `actions: read`. Every scan
   // makes this call once.
   listEndedRuns(workflow: string): Promise<RunOfTheWorkflow[]>;

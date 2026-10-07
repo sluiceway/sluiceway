@@ -1,6 +1,6 @@
 # A run that failed says so under the scan line, and the next scan counts the runs that failed
 
-> Amends 0012 (a problem in the config writes one line on the dashboard before the job fails), 0017 (one more request per scan), 0029, 0086 and 0108 (two more lines under the scan line), 0009 (three optional keys on the root marker) and 0077 (the Sluiceway step of the one-step workflow has `if: ${{ !cancelled() }}`, and the action has a `job-status` input). Built as slice 5.55, for issue 293. Decided by the owner on 2026-10-07.
+> Amends 0012 (a problem in the config writes one line on the dashboard before the job fails), 0017 (one more request per scan), 0029, 0086 and 0108 (two more lines under the scan line), 0009 (three optional keys on the root marker) and 0077 (the Sluiceway step of the one-step workflow has `if: ${{ !cancelled() }}`, and the action has a `job-status` input). Built as slice 5.56, for issue 293. Decided by the owner on 2026-10-07.
 
 Found in the acceptance walk-through of 2026-10-06. Twice the dashboard looked current while it was not:
 
@@ -35,7 +35,7 @@ The owner chose both for the first case, and a line from the run itself for the 
 
   It is written on the root marker as `runs-failed` (the count), `runs-failed-newest` (the run id) and `runs-failed-at` (when it started, ISO 8601), after every older key. Every other writer carries it, as it carries the waiting run. The next scan writes what it counts, so the line goes with the scan after. A first scan has no scan before and counts nothing.
 - **The order under the scan line**: the line of a failed run, a scan that is running (0108), a run that waits for a runner (0086), the runs that failed, then a deploy freeze (0115). The line of a failed run is right under the scan line because it says that line is old.
-- **The job log says each**: `The dashboard says this run failed before Sluiceway ran, under the scan line, until a run gets as far as Sluiceway (record 0119): <url>`, with `found a problem in sluiceway.yaml` and `until a run reads sluiceway.yaml again` for the config, and `3 runs of sluiceway.yml failed since the scan before this one. The dashboard says so under the scan line until the next scan (record 0119): <url>`.
+- **The job log says each**: `The dashboard says this run failed before Sluiceway ran, under the scan line, until a run gets as far as Sluiceway (record 0120): <url>`, with `found a problem in sluiceway.yaml` and `until a run reads sluiceway.yaml again` for the config, and `3 runs of sluiceway.yml failed since the scan before this one. The dashboard says so under the scan line until the next scan (record 0120): <url>`.
 
 ### It is a line, never a state
 
@@ -47,7 +47,7 @@ A pull request is not the default branch, and its config is not the repo's yet. 
 
 ## Consequences
 
-- One request more per scan. The worst case of 0017, 0086 and 0108 becomes 412 requests on the first try of a scan of 100 stacks and 814 with three tries, still below 1,000.
+- One request more per scan. The worst case of 0017, 0086, 0108 and 0119 becomes 414 requests on the first try of a scan of 100 stacks and 818 with three tries, still below 1,000.
 - A workflow from before this record has no `if:` on the Sluiceway step. Its failed runs say nothing at the time, and the next scan counts them. Adding the `if:` is the whole upgrade.
 - A step after Sluiceway that fails is not before it: the Sluiceway step did its work. The next scan counts that run among the failed ones, which is true.
 - When no run of the workflow starts at all, such as a workflow file that does not parse, nothing of Sluiceway runs and the scan line stops moving. GitHub ends such runs as `startup_failure`, so the next scan that does start counts them.
