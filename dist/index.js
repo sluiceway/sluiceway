@@ -13211,7 +13211,7 @@ var require_fetch = __commonJS((exports, module) => {
       request.cache = "no-store";
     }
     const newConnection = forceNewConnection ? "yes" : "no";
-    if (request.mode === "websocket") {}
+    if (request.mode === "websocket") {} else {}
     let requestBody = null;
     if (request.body == null && fetchParams.processRequestEndOfBody) {
       queueMicrotask(() => fetchParams.processRequestEndOfBody());
@@ -43313,7 +43313,7 @@ function finalize(ctx, schema) {
     result.$schema = "http://json-schema.org/draft-07/schema#";
   } else if (ctx.target === "draft-04") {
     result.$schema = "http://json-schema.org/draft-04/schema#";
-  } else if (ctx.target === "openapi-3.0") {}
+  } else if (ctx.target === "openapi-3.0") {} else {}
   if (ctx.external?.uri) {
     const id = ctx.external.registry.get(schema)?.id;
     if (!id)
@@ -53976,6 +53976,7 @@ var NEWEST_DEPLOYMENTS = `query ($owner: String!, $repo: String!, $environment: 
         payload
         createdAt
         creator {
+          __typename
           login
         }
         latestStatus {
@@ -54003,6 +54004,9 @@ function parsePayload(payload) {
     }
   }
   return parsed;
+}
+function siteLogin({ __typename, login }) {
+  return __typename === "Bot" && !login.endsWith("[bot]") ? `${login}[bot]` : login;
 }
 function toDeployment(deployment) {
   return {
@@ -54070,7 +54074,7 @@ function deploymentCalls(octokit, repo) {
           sha: node2.commitOid,
           payload: parsePayload(node2.payload),
           createdAt: node2.createdAt,
-          ...node2.creator?.login ? { creator: node2.creator.login } : {},
+          ...node2.creator?.login ? { creator: siteLogin(node2.creator) } : {},
           status: node2.latestStatus ? withSucceededAt({
             state: node2.latestStatus.state.toLowerCase(),
             description: node2.latestStatus.description ?? "",
@@ -66512,7 +66516,7 @@ async function startQueued(context3, repo, handOn, watch, report2) {
       continue;
     }
     if (creator === undefined || !writers.has(creator.toLowerCase())) {
-      log.info(`Deployment record ${id} names this run, and ${creator === undefined ? "GitHub names nobody who opened it" : `${creator} opened it, who is not in recordWriters`}. It is left alone.`);
+      log.warning(`Deployment record ${id} names this run, and ${creator === undefined ? "GitHub names nobody who opened it" : `${creator} opened it, who is not in recordWriters`}. It is left alone. recordWriters names ${[...writers].join(", ")}.`, "Deployment record left alone");
       continue;
     }
     const known = stacks2.get(stack);
