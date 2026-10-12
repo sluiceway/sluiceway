@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.50.1](https://github.com/sluiceway/sluiceway/compare/v0.50.0...v0.50.1) (2026-10-12)
+
+
+### Bug Fixes
+
+* **github:** match an app's record writer login with [bot] and warn when a record is left alone ([#303](https://github.com/sluiceway/sluiceway/issues/303)) ([ec0e523](https://github.com/sluiceway/sluiceway/commit/ec0e52366c78675b502b139c831314605f4ca467))
+
 ## [0.50.0](https://github.com/sluiceway/sluiceway/compare/v0.49.0...v0.50.0) (2026-10-07)
 
 
