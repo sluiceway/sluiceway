@@ -536,7 +536,7 @@ async function resolveTicks(
 
 // One line of the job log for each thing the judgement found. The zone is
 // the dashboard's, for a time the line says (record 0089).
-function findingText(finding: Finding, timeZone = "UTC"): string {
+export function findingText(finding: Finding, timeZone = "UTC"): string {
   switch (finding.kind) {
     case "taken": {
       const { tick, fact } = finding;
