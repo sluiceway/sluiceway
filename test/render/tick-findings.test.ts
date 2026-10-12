@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import type { Tick } from "../../src/core/edit-history.ts";
-import type { Finding } from "../../src/core/tick-judgement.ts";
+import type { Finding, MergeRefusal } from "../../src/core/tick-judgement.ts";
 import type { TickTarget } from "../../src/core/tick-rule.ts";
-import { findingText } from "../../src/render/tick-findings.ts";
+import { findingText, mergeProblem, mergeRefusalText } from "../../src/render/tick-findings.ts";
 
 // The line of the job log for each thing the judgement of the ticks found,
 // one of each kind and each variant of its words.
@@ -144,5 +144,69 @@ describe("the job log line of each finding", () => {
   test("a time is in the dashboard's zone", () => {
     const closed: Finding = { kind: "window-closed", stackId: "app:prod", opens: OPENS };
     expect(findingText(closed, "Europe/Brussels")).toContain("2027-01-05 09:00 UTC+1");
+  });
+});
+
+describe("a merge tick that started nothing", () => {
+  const REFUSALS: [Exclude<MergeRefusal, { kind: "refused-by-github" }>, string][] = [
+    [
+      { kind: "waits-on", stackIds: ["db:prod"] },
+      "and the stack depends on db:prod, which has a change waiting. Nothing is merged.",
+    ],
+    [
+      { kind: "waits-on", stackIds: ["db:prod", "net:prod"] },
+      "and the stack depends on db:prod and net:prod, which have changes waiting. Nothing is merged.",
+    ],
+    [{ kind: "closed" }, "and the pull request is not open any more."],
+    [{ kind: "head-moved" }, "and the pull request has a new head commit since."],
+    [
+      { kind: "not-qualified", why: "draft" },
+      "and the pull request no longer qualifies: it is a draft.",
+    ],
+    [
+      { kind: "not-qualified", why: "other-stacks" },
+      "and the pull request no longer qualifies: its files belong to another stack.",
+    ],
+    [{ kind: "no-method" }, "and the repo allows no merge method."],
+  ];
+
+  test.each(REFUSALS)("the job log for %o", (refusal, text) => {
+    expect(mergeRefusalText(refusal)).toBe(text);
+  });
+
+  const PROBLEMS: [MergeRefusal, ReturnType<typeof mergeProblem>][] = [
+    [
+      { kind: "waits-on", stackIds: ["db:prod"] },
+      { reason: "waits-on", detail: undefined, waitsOn: ["db:prod"] },
+    ],
+    [
+      { kind: "closed" },
+      { reason: "not-qualified", detail: "it is not open any more", waitsOn: undefined },
+    ],
+    [{ kind: "head-moved" }, { reason: "head-moved", detail: undefined, waitsOn: undefined }],
+    [
+      { kind: "not-qualified", why: "draft" },
+      { reason: "not-qualified", detail: "it is a draft", waitsOn: undefined },
+    ],
+    [
+      { kind: "not-qualified", why: "other-stacks" },
+      { reason: "not-qualified", detail: "its files belong to another stack", waitsOn: undefined },
+    ],
+    [
+      { kind: "no-method" },
+      {
+        reason: "merge-refused",
+        detail: "the repository allows no merge method",
+        waitsOn: undefined,
+      },
+    ],
+    [
+      { kind: "refused-by-github", message: "Base branch was modified" },
+      { reason: "merge-refused", detail: "Base branch was modified", waitsOn: undefined },
+    ],
+  ];
+
+  test.each(PROBLEMS)("the comment for %o", (refusal, problem) => {
+    expect(mergeProblem(refusal)).toEqual(problem);
   });
 });
