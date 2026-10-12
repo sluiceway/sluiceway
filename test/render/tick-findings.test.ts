@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import type { Tick } from "../../src/core/edit-history.ts";
 import type { Finding } from "../../src/core/tick-judgement.ts";
 import type { TickTarget } from "../../src/core/tick-rule.ts";
-import { findingText } from "../../src/modes/resolve.ts";
+import { findingText } from "../../src/render/tick-findings.ts";
 
 // The line of the job log for each thing the judgement of the ticks found,
 // one of each kind and each variant of its words.
