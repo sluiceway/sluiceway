@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.50.1](https://github.com/sluiceway/sluiceway/compare/v0.50.0...v0.50.1) (2026-10-20)
+
+
+### Bug Fixes
+
+* a dispatched resolve waits in line, and settle ends a cancelled resolve's records ([#313](https://github.com/sluiceway/sluiceway/issues/313)) ([ee3dab6](https://github.com/sluiceway/sluiceway/commit/ee3dab651d1c0cc614160320248d4b131ec15932))
+* **github:** match an app's record writer login with [bot] and warn when a record is left alone ([#303](https://github.com/sluiceway/sluiceway/issues/303)) ([ec0e523](https://github.com/sluiceway/sluiceway/commit/ec0e52366c78675b502b139c831314605f4ca467))
+
 ## [0.50.0](https://github.com/sluiceway/sluiceway/compare/v0.49.0...v0.50.0) (2026-10-07)
 
 
