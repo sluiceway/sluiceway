@@ -1,5 +1,7 @@
 # The edit history names the ticker, and the event is only a wake-up
 
+> Amended by 0123: in the split workflow `resolve` waits in line with `queue: max` again. A dispatched run's `resolve` is the only one that hands on a record opened for that run, or a stack that waited, so a replaced one lost its deploy.
+>
 > Amended by 0119: the stretch looks through one entry by the bot that does not hold the tick, when the newest entry of the stretch so far is by the bot and the entry right before it holds the tick. That is a write that went over the tick and wrote it back, and the ticker is still the person who made it.
 >
 > Amended by 0108: the scan writes the rescan box back unticked in its first write, before the previews, so a person sees their tick taken at once. The sweep is untouched and runs at the late read of the write at the end.

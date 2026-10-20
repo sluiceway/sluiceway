@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { parseConfig } from "../../src/core/config.ts";
+import { checkWorkflows } from "../../src/core/workflow-check.ts";
 import { MODES } from "../../src/mode.ts";
 import {
   EXAMPLE_WORKFLOWS,
@@ -298,8 +299,29 @@ describe("the split workflow", () => {
     const byMode = (mode: string) =>
       Object.values(workflow.jobs).find((job) => modeOf(job) === mode)?.concurrency;
     expect(byMode("scan")).toBe("sluiceway-scan");
-    expect(byMode("resolve")).toBe("sluiceway-resolve");
+    // Record 0123: a dispatched resolve is the only one that hands on what
+    // its run carries, so a waiting one is never dropped.
+    expect(byMode("resolve")).toEqual({ group: "sluiceway-resolve", queue: "max" });
   });
+
+  // Record 0123: resolve waits in line, and settle ends the records of a run
+  // whose resolve was cancelled.
+  test.each(split)(
+    "the check finds resolve queued and settle after a cancelled one: $where",
+    ({ text }) => {
+      const report = checkWorkflows(
+        [{ path: ".github/workflows/sluiceway.yml", text }],
+        parseConfig(""),
+      );
+      expect(report.workflows).toHaveLength(1);
+      expect(report.workflows[0]?.jobs.map(({ mode }) => mode)).toEqual(
+        expect.arrayContaining(["resolve", "settle"]),
+      );
+      const kinds = report.warnings.map(({ kind }) => kind);
+      expect(kinds).not.toContain("settle-skips-cancelled-resolve");
+      expect(kinds).not.toContain("resolve-no-queue");
+    },
+  );
 });
 
 describe("the setup in docs/workflow.md", () => {

@@ -58,7 +58,9 @@ jobs:
   resolve:
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || (github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'sluiceway'))
     runs-on: ubuntu-latest
-    concurrency: sluiceway-resolve
+    concurrency:
+      group: sluiceway-resolve
+      queue: max
     outputs:
       matrix: ${{ steps.resolve.outputs.matrix }}
     steps:
@@ -94,7 +96,7 @@ jobs:
 
   settle:
     needs: [resolve, apply]
-    if: always() && needs.resolve.outputs.matrix != '' && needs.resolve.outputs.matrix != '[]'
+    if: always() && (needs.resolve.result == 'cancelled' || (needs.resolve.outputs.matrix != '' && needs.resolve.outputs.matrix != '[]'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -111,12 +113,12 @@ What the parts are for:
 - **Never add `pull_request` or `merge_group` to this workflow.** A scan writes the dashboard from the code it checked out, and on a pull request or in a merge queue that is code that is not on the default branch yet. A merge queue ends in a push to the default branch, and the scan runs on that push.
 - **`actions: write`** lets the rescan box, `settle` and an `apply` that a newer push stopped start a scan, and lets a scan see whether a run is still on its way. `id-token: write` is not in the block. Add it only to the jobs that run the tool, and only if your credential step uses OIDC. A job's own `permissions:` replace the workflow's, so repeat the whole block there.
 - **`sluiceway-scan`** makes scans run one at a time. A running scan finishes, and of the waiting ones only the newest runs.
-- **`sluiceway-resolve`** does the same for ticks. Any `resolve` run handles every ticked box it finds, so a replaced run loses nothing. Replaced runs show as cancelled in the Actions list. That is normal.
-- **`queue: max`** on `apply` keeps a waiting deploy from being cancelled by a newer one. Never add `cancel-in-progress` to this job.
+- **`sluiceway-resolve`** makes ticks run one at a time, and its `queue: max` keeps every waiting `resolve`. A dispatched run's `resolve` is the only one that hands on what that run carries: a record [the app](command-line.md) or another [record writer](what-sluiceway-writes.md#opening-a-record-yourself) opened for it, or a stack that was [queued](#stack-dependencies) behind another. Without `queue: max`, GitHub drops a waiting `resolve` when an edit of the dashboard starts a newer one, and that deploy never starts.
+- **`queue: max`** on `apply` keeps a waiting deploy from being cancelled by a newer one. Never add `cancel-in-progress` to this job or to `resolve`.
 - **The `if:` on `resolve`** keeps an edit of an ordinary issue from starting a runner. If you change `dashboard.label`, change it here too. `resolve` also runs when the workflow is dispatched, for [stack dependencies](#stack-dependencies), and on the schedule, for [deploy windows](#deploy-windows).
 - **`resolve` hands `apply` a deployment record.** It creates one record per ticked stack in GitHub's Deployments list and puts `{ stack, environment, deployment }` in `matrix`. `apply` deploys only while that record is still open. "Re-run failed jobs" therefore deploys nothing. To try again, tick the box again.
 - **`!cancelled()` on `apply`** lets the deploys that `resolve` started go ahead when `resolve` itself ended red, for example because one of several ticks could not be verified or the dashboard could not be written. Without a status check in its `if:`, GitHub skips a job whose `needs` failed. Every entry in `matrix` is a record that `resolve` created after it checked the ticker, so nothing else can get through here.
-- **`settle`** gives a deploy a result when its job was cancelled or rejected, so a row never stays "deploying" for ever. It touches only the deployment records of its own run. When it ended one it puts the failure line on that row itself, within seconds and with no tool, and starts a full scan, which writes the row again with the fresh diff, so it needs `actions: write` as well. With `dependsOn`, it also starts the workflow again when a stack went out that others are queued behind ([stack dependencies](#stack-dependencies)).
+- **`settle`** gives a deploy a result when its job was cancelled or rejected, so a row never stays "deploying" for ever. It also runs when `resolve` was cancelled, which hands nothing on, and ends the records opened for the run with a failure on their rows. It touches only the deployment records of its own run. When it ended one it puts the failure line on that row itself, within seconds and with no tool, and starts a full scan, which writes the row again with the fresh diff, so it needs `actions: write` as well. With `dependsOn`, it also starts the workflow again when a stack went out that others are queued behind ([stack dependencies](#stack-dependencies)).
 - **A deploy has no time limit of Sluiceway's** unless the `deploy-timeout` input gives it one. Set `timeout-minutes` on the `apply` job either way.
 - **`@v0`** follows every release from 0.1.0 until 1.0.0. A commit SHA stays the choice if you want to review every update ([Pin a commit](workflow.md#pin-a-commit)).
 
@@ -180,7 +182,7 @@ The deploy. A merge made with the workflow token starts no run of its push, so `
 
   settle:
     needs: [scan, resolve, apply, apply-merged]
-    if: always() && ((needs.resolve.outputs.matrix != '' && needs.resolve.outputs.matrix != '[]') || (needs.scan.outputs.matrix != '' && needs.scan.outputs.matrix != '[]'))
+    if: always() && (needs.resolve.result == 'cancelled' || (needs.resolve.outputs.matrix != '' && needs.resolve.outputs.matrix != '[]') || (needs.scan.outputs.matrix != '' && needs.scan.outputs.matrix != '[]'))
 ```
 
 The pull requests. The scan reads them with `pull-requests: read`, which the block above already gives. It needs no `statuses: read`, on a private repo too: it reads the checks of each pull request as counts (record 0119).

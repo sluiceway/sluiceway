@@ -134,6 +134,7 @@ export interface Found {
   // Where the workflow is written down, for the failure message.
   where: string;
   workflow: Workflow;
+  text: string;
 }
 
 // Every complete workflow the user docs show, and every example file. A YAML
@@ -148,7 +149,7 @@ export function workflows(): Found[] {
   return [...inDocs, ...files].flatMap(({ where, text }) => {
     const parsed = Bun.YAML.parse(text) as Partial<Workflow> | null;
     return parsed && typeof parsed === "object" && "jobs" in parsed
-      ? [{ where, workflow: parsed as Workflow }]
+      ? [{ where, workflow: parsed as Workflow, text }]
       : [];
   });
 }

@@ -393,12 +393,18 @@ export function workflowWarningText(warning: WorkflowWarning): string {
       return `${path}, job ${warning.job}: the concurrency group has no queue: max, so a deploy that waits is cancelled when a newer one for the same stack arrives.`;
     case "apply-cancels":
       return `${path}, job ${warning.job}: cancel-in-progress stops a deploy half way when a newer one for the same stack arrives. Take it out of this job.`;
+    case "resolve-no-queue":
+      return `${path}, job ${warning.job}: the concurrency group has no queue: max, so a resolve that waits is dropped when an edit of the dashboard starts a newer one. A dispatched run's resolve is the only one that hands on the deploy it carries, a record the app or another writer opened for that run or a queued stack, so that deploy never starts.`;
+    case "resolve-cancels":
+      return `${path}, job ${warning.job}: cancel-in-progress stops a resolve when a newer run arrives, and with it the deploy that a dispatched run carries. Take it out of this job.`;
     case "no-status-check":
       return warning.mode === "apply"
         ? `${path}, job ${warning.job}: the if: has no !cancelled(). Without a status check GitHub skips the deploys that resolve started whenever resolve itself ends red.`
         : `${path}, job ${warning.job}: the if: has no always(). settle exists for deploys that were cancelled or failed, and without always() GitHub skips it exactly then.`;
     case "settle-skips-apply":
       return `${path}, job ${warning.job}: settle does not wait for the job ${warning.apply}. Add ${warning.apply} to its needs, so it ends the records of those deploys too.`;
+    case "settle-skips-cancelled-resolve":
+      return `${path}, job ${warning.job}: the if: skips settle when ${warning.resolve} was cancelled, which hands nothing on. A record opened for the run then stays open and its row says deploying until a later scan. Add needs.${warning.resolve}.result == 'cancelled' as one more way in, as docs/split-workflow.md shows.`;
     case "no-merged-apply":
       return `${path}: mergeAndDeploy is on, and no apply job takes the matrix of the scan. The scan after a merge hands the deploy on through its own matrix output, so a merged update would never deploy. Add a copy of the apply job that takes needs.scan.outputs.matrix.`;
     case "no-on-merge-apply":
@@ -427,7 +433,7 @@ const NO_CONCURRENCY: Record<"scan" | "resolve" | "apply" | "auto", string> = {
   auto: "Two runs could scan or deploy at once. Use one group with queue: max, such as group: sluiceway-${{ github.event.issue.number }}, so the runs wait in line and an edit of another issue waits for none of them.",
   scan: "Scans would run side by side. Use concurrency: sluiceway-scan, so they run one at a time.",
   resolve:
-    "Two runs could handle the same tick. Use concurrency: sluiceway-resolve, so ticks are handled one run at a time.",
+    "Two runs could handle the same tick. Use group: sluiceway-resolve with queue: max, so ticks are handled one run at a time and a waiting run is never dropped.",
   apply:
     // biome-ignore lint/suspicious/noTemplateCurlyInString: a GitHub expression, not a template.
     "Two deploys of one stack could run at once. Use a group per stack, group: sluiceway-apply-${{ matrix.stack }}, with queue: max.",
