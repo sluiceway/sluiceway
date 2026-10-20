@@ -59,8 +59,8 @@
 //      alone, and the dispatched resolve, which waited in line behind it,
 //      hands it on and apply deploys it with the real tool.
 //  17. A tick from the app whose dispatched resolve was cancelled (record
-//      0123): settle ends the record and starts a full scan, so the row does
-//      not stay deploying.
+//      0123): settle ends the record as error, says so in its log and starts
+//      a full scan, and the row comes back pending, not deploying.
 //
 // The tool only runs in a copy inside the work directory, against a file
 // backend made there, with an environment built from nothing. `node` on PATH
@@ -1577,8 +1577,10 @@ good =
 // 17. A tick from the app whose dispatched resolve was cancelled (record
 // 0123), as by a person, or by GitHub before queue: max. Its resolve hands
 // nothing on, and settle, which now runs when resolve was cancelled, ends
-// the record and starts a full scan. That scan puts the failure line on the
-// row of app:prod, so the row does not stay deploying for ever.
+// the record as error, says so in its log, writes the failure line and
+// starts a full scan. The scene checks that the record ended, the log line,
+// and that after the scan the row of app:prod is pending again, not
+// deploying.
 console.log("::group::A change to app:prod, for a tick from the app whose resolve is cancelled");
 edit("app/Pulumi.prod.yml", "app:tier: gold", "app:tier: silver");
 console.log("::endgroup::");
