@@ -313,6 +313,10 @@ describe("the split workflow", () => {
       [{ path: ".github/workflows/sluiceway.yml", text }],
       parseConfig(""),
     );
+    expect(report.workflows).toHaveLength(1);
+    expect(report.workflows[0]?.jobs.map(({ mode }) => mode)).toEqual(
+      expect.arrayContaining(["resolve", "settle"]),
+    );
     const kinds = report.warnings.map(({ kind }) => kind);
     expect(kinds).not.toContain("settle-skips-cancelled-resolve");
     expect(kinds).not.toContain("resolve-no-queue");
