@@ -298,7 +298,15 @@ describe("the split workflow", () => {
     const byMode = (mode: string) =>
       Object.values(workflow.jobs).find((job) => modeOf(job) === mode)?.concurrency;
     expect(byMode("scan")).toBe("sluiceway-scan");
-    expect(byMode("resolve")).toBe("sluiceway-resolve");
+    // Record 0123: a dispatched resolve is the only one that hands on what
+    // its run carries, so a waiting one is never dropped.
+    expect(byMode("resolve")).toEqual({ group: "sluiceway-resolve", queue: "max" });
+  });
+
+  // Record 0123: settle ends the records of a run whose resolve was cancelled.
+  test.each(split)("settles after a cancelled resolve: $where", ({ workflow }) => {
+    const settle = Object.values(workflow.jobs).find((job) => modeOf(job) === "settle");
+    expect(settle?.if).toContain("always() && (needs.resolve.result == 'cancelled' || ");
   });
 });
 

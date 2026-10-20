@@ -142,12 +142,20 @@ export type WorkflowWarning =
   | { kind: "apply-no-queue"; path: string; job: string }
   // cancel-in-progress stops a deploy half way.
   | { kind: "apply-cancels"; path: string; job: string }
+  // Record 0123: without queue: max a waiting resolve is dropped when an edit
+  // of the dashboard starts a newer one, and with it the records only that
+  // run hands on. cancel-in-progress drops a running one the same way.
+  | { kind: "resolve-no-queue"; path: string; job: string }
+  | { kind: "resolve-cancels"; path: string; job: string }
   // apply needs !cancelled() or always() to run after a red resolve, and
   // settle needs always() to run after a cancelled deploy.
   | { kind: "no-status-check"; path: string; job: string; mode: "apply" | "settle" }
   // settle ends the records of deploys that ended without a result, so it
   // runs after every apply job.
   | { kind: "settle-skips-apply"; path: string; job: string; apply: string }
+  // Record 0123: settle also runs when resolve was cancelled, which hands
+  // nothing on, so the records of its run do not stay open.
+  | { kind: "settle-skips-cancelled-resolve"; path: string; job: string; resolve: string }
   // Merge and deploy (records 0054, 0064): the scan after a merge hands its
   // deploy to a second apply job through its own matrix output.
   | { kind: "no-merged-apply"; path: string }
@@ -605,6 +613,9 @@ function checkJobs(
         }
         if (concurrency.queue !== "max") warnings.push({ kind: "apply-no-queue", path, job });
         if (concurrency.cancels) warnings.push({ kind: "apply-cancels", path, job });
+      } else if (mode === "resolve") {
+        if (concurrency.queue !== "max") warnings.push({ kind: "resolve-no-queue", path, job });
+        if (concurrency.cancels) warnings.push({ kind: "resolve-cancels", path, job });
       }
     }
     if (mode === "apply" && !/!\s*cancelled\(\s*\)|\balways\(\s*\)/.test(condition)) {
@@ -616,11 +627,20 @@ function checkJobs(
   }
 
   const applies = withMode("apply");
+  const resolves = withMode("resolve");
   for (const settle of withMode("settle")) {
-    const { needs } = jobOf(settle);
+    const { needs, condition } = jobOf(settle);
     for (const apply of applies) {
       if (!needs.includes(apply)) {
         warnings.push({ kind: "settle-skips-apply", path, job: settle, apply });
+      }
+    }
+    // An if: of always() alone runs settle after a cancelled resolve too.
+    const always = /^(\$\{\{)?\s*always\(\s*\)\s*(\}\})?$/.test(condition.trim());
+    for (const resolve of resolves) {
+      if (!needs.includes(resolve) || always) continue;
+      if (!new RegExp(`\\bneeds\\.${resolve}\\.result\\b`).test(condition)) {
+        warnings.push({ kind: "settle-skips-cancelled-resolve", path, job: settle, resolve });
       }
     }
   }

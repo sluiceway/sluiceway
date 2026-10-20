@@ -22,8 +22,11 @@ jobs:
     # nothing is left to deploy, a chain and a merge. A re-run and a
     # cancelled deploy run the split workflow's jobs. A tick from the command
     # line, with `npx sluiceway` against a fake app, is resolved and deployed
-    # by the run it dispatched. Last, a scan started the way a runner starts
-    # `uses: sluiceway/sluiceway@v0`, from a moving tag (hotfix 0.1.1).
+    # by the run it dispatched. A tick from the app still deploys when an
+    # edit of the dashboard right after it resolves first, and settle ends
+    # its record when its resolve was cancelled. Last, a scan started the way
+    # a runner starts `uses: sluiceway/sluiceway@v0`, from a moving tag
+    # (hotfix 0.1.1).
     #
     # The bundle is started by scripts/e2e.ts and not by a `uses: ./` step. A
     # runner sets GITHUB_API_URL, GITHUB_WORKSPACE, GITHUB_SHA and

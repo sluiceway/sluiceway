@@ -317,7 +317,7 @@ describe("the rest of the workflow", () => {
     const { warnings } = broken((text) =>
       text
         .replace("    concurrency: sluiceway-scan\n", "")
-        .replace("    concurrency: sluiceway-resolve\n", ""),
+        .replace("    concurrency:\n      group: sluiceway-resolve\n      queue: max\n", ""),
     );
     expect(warnings).toEqual([
       { kind: "no-concurrency", path: PATH, job: "scan", mode: "scan" },
@@ -355,13 +355,18 @@ describe("the rest of the workflow", () => {
   });
 
   test("an apply group without queue: max", () => {
-    const { warnings } = broken((text) => text.replace("      queue: max\n", ""));
+    const { warnings } = broken((text) =>
+      text.replace("matrix.stack }}\n      queue: max\n", "matrix.stack }}\n"),
+    );
     expect(warnings).toEqual([{ kind: "apply-no-queue", path: PATH, job: "apply" }]);
   });
 
   test("an apply group that cancels a running deploy", () => {
     const { warnings } = broken((text) =>
-      text.replace("      queue: max\n", "      queue: max\n      cancel-in-progress: true\n"),
+      text.replace(
+        "matrix.stack }}\n      queue: max\n",
+        "matrix.stack }}\n      queue: max\n      cancel-in-progress: true\n",
+      ),
     );
     expect(warnings).toEqual([{ kind: "apply-cancels", path: PATH, job: "apply" }]);
   });
@@ -401,6 +406,53 @@ describe("the rest of the workflow", () => {
       { kind: "settle-skips-apply", path: PATH, job: "settle", apply: "apply" },
     ]);
   });
+
+  // Record 0123.
+  test("a resolve group without queue: max, in either form", () => {
+    for (const group of [
+      "    concurrency: sluiceway-resolve\n",
+      "    concurrency:\n      group: sluiceway-resolve\n",
+    ]) {
+      const { warnings } = broken((text) =>
+        text.replace("    concurrency:\n      group: sluiceway-resolve\n      queue: max\n", group),
+      );
+      expect(warnings).toEqual([{ kind: "resolve-no-queue", path: PATH, job: "resolve" }]);
+    }
+  });
+
+  test("a resolve group that cancels a running resolve", () => {
+    const { warnings } = broken((text) =>
+      text.replace(
+        "      group: sluiceway-resolve\n      queue: max\n",
+        "      group: sluiceway-resolve\n      queue: max\n      cancel-in-progress: true\n",
+      ),
+    );
+    expect(warnings).toEqual([{ kind: "resolve-cancels", path: PATH, job: "resolve" }]);
+  });
+
+  test("a settle job that skips a cancelled resolve", () => {
+    const { warnings } = broken((text) =>
+      text.replace("needs.resolve.result == 'cancelled' || ", ""),
+    );
+    expect(warnings).toEqual([
+      {
+        kind: "settle-skips-cancelled-resolve",
+        path: PATH,
+        job: "settle",
+        resolve: "resolve",
+      },
+    ]);
+  });
+
+  test("a settle job on always() alone is fine", () => {
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: a GitHub expression, not a template.
+    for (const condition of ["always()", "${{ always() }}"]) {
+      const { warnings } = broken((text) =>
+        text.replace(/^ {4}if: always\(\) && .*$/m, `    if: ${condition}`),
+      );
+      expect(warnings).toEqual([]);
+    }
+  });
 });
 
 // The whole workflow with the changes docs/workflow.md asks for merge and
@@ -416,8 +468,8 @@ const MERGED = WHOLE.replace(
     "      - id: scan\n        uses: sluiceway/sluiceway@v0\n        with:\n          mode: scan\n",
   )
   .replace(
-    "    runs-on: ubuntu-latest\n    concurrency: sluiceway-resolve\n",
-    "    runs-on: ubuntu-latest\n    permissions:\n      contents: write\n      issues: write\n      deployments: write\n      actions: write\n      pull-requests: read\n    concurrency: sluiceway-resolve\n",
+    "    runs-on: ubuntu-latest\n    concurrency:\n      group: sluiceway-resolve\n",
+    "    runs-on: ubuntu-latest\n    permissions:\n      contents: write\n      issues: write\n      deployments: write\n      actions: write\n      pull-requests: read\n    concurrency:\n      group: sluiceway-resolve\n",
   )
   .replace(
     "  settle:\n    needs: [resolve, apply]\n",

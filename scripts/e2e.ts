@@ -54,6 +54,13 @@
 //      bundle of `npx sluiceway` signs in to a fake app and ticks app:prod. The
 //      app dispatches the workflow and opens a record as sluiceway[bot], and
 //      the run it dispatched deploys it with the real tool.
+//  16. A tick from the app and an edit right after it, in the split workflow
+//      (record 0123): the edit's resolve runs first and leaves the record
+//      alone, and the dispatched resolve, which waited in line behind it,
+//      hands it on and apply deploys it with the real tool.
+//  17. A tick from the app whose dispatched resolve was cancelled (record
+//      0123): settle ends the record and starts a full scan, so the row does
+//      not stay deploying.
 //
 // The tool only runs in a copy inside the work directory, against a file
 // backend made there, with an environment built from nothing. `node` on PATH
@@ -568,6 +575,8 @@ interface TickOptions {
   beforeRun?: () => Promise<void>;
   // The commit the run checks out. SECOND_SHA without it.
   sha?: string;
+  // The edit, when it is not the tick of the stack's box.
+  edit?: (body: string) => string;
 }
 
 // A person ticks the box of a stack, and the edit starts a run.
@@ -578,7 +587,11 @@ async function tick(
 ): Promise<IssuesRun> {
   const [dashboard] = await fake.listIssues({ label: "sluiceway", state: "open" });
   if (!dashboard) throw new Error("There is no dashboard to tick.");
-  fake.editBody(dashboard.number, tickRow(dashboard.body, stack), person);
+  fake.editBody(
+    dashboard.number,
+    options.edit ? options.edit(dashboard.body) : tickRow(dashboard.body, stack),
+    person,
+  );
   runNumber++;
   const runId = String(runNumber);
   // GitHub knows the run from the moment the edit started it.
@@ -1425,6 +1438,186 @@ try {
 } finally {
   await app.close();
 }
+
+// 16. A tick from the app, and an edit of the dashboard right after it, in
+// the split workflow (record 0123). The app opens a record of app:prod for
+// the run it dispatched, and a second later alice ticks the rescan box. The
+// run of her edit gets to its resolve first, and the dispatched run's
+// resolve waits in line behind it, as queue: max keeps it, instead of being
+// dropped. The edit's resolve leaves the record alone, and the dispatched
+// resolve hands it on and apply deploys it with the real tool.
+console.log("::group::A change to app:prod, for a tick from the app and an edit after it");
+edit("app/Pulumi.prod.yml", "app:tier: platinum", "app:tier: gold");
+console.log("::endgroup::");
+const LINED_UP_SHA = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+// What the app does for a tick: it dispatches the workflow and opens a record
+// in its own name for the run it started, which GitHub knows while it runs.
+async function appTick(stack: string, sha: string, body: string) {
+  await fake.dispatchWorkflow(WORKFLOW, "main");
+  runNumber++;
+  const runId = String(runNumber);
+  fake.seedRun(runId, { completed: false });
+  const fingerprint = rowFingerprint(body, stack);
+  const record = fake.seedDeployment({
+    task: `sluiceway:${stack}`,
+    environment: "sluiceway",
+    sha,
+    creator: APP_LOGIN,
+    payload: {
+      v: 1,
+      hash: rowHash(body, stack) ?? "",
+      ticker: ALICE.login,
+      run: runId,
+      ...(fingerprint === undefined ? {} : { fingerprint }),
+    },
+    status: { state: "queued" },
+  });
+  return { run: { runId, payload: { ref: "refs/heads/main", inputs: {} } }, record: record.id };
+}
+// A job of a run the app dispatched, in the split workflow.
+function dispatchedJob(
+  mode: string,
+  run: { runId: string; payload: unknown },
+  sha: string,
+  title: string,
+  inputs?: Record<string, string>,
+): Promise<LoopStep> {
+  return loopStep(mode, {
+    runId: run.runId,
+    sha,
+    event: "workflow_dispatch",
+    payload: run.payload,
+    ...(inputs === undefined ? {} : { inputs }),
+    title: `Run ${run.runId}: ${title}`,
+  });
+}
+const beforeLinedUp = await scanStep(LINED_UP_SHA, "schedule");
+const linedUpBody = dashboardBody(beforeLinedUp);
+good =
+  report("The scan before the tick from the app and the edit after it", [
+    ...(beforeLinedUp.exitCode === 0
+      ? []
+      : [`The scan ended with exit code ${beforeLinedUp.exitCode}.`]),
+    ...(rowHash(linedUpBody, "app:prod") === undefined
+      ? ["The row of app:prod is not pending with a hash."]
+      : []),
+  ]) && good;
+const appDeploysBeforeLinedUp = await deploysOf("app", "prod");
+const linedUp = await appTick("app:prod", LINED_UP_SHA, linedUpBody);
+const rescanned = await tick("app:prod", ALICE, {
+  mode: "resolve",
+  sha: LINED_UP_SHA,
+  edit: (body) => body.replace("- [ ] Rescan all stacks", "- [x] Rescan all stacks"),
+});
+endRun(rescanned);
+const linedUpOpen = rescanned.resolved.records.find(({ id }) => id === linedUp.record);
+good =
+  reportStep("The edit right after the tick from the app: its resolve", rescanned.resolved, [
+    ...(rescanned.resolved.exitCode === 0
+      ? []
+      : [`resolve ended with exit code ${rescanned.resolved.exitCode}.`]),
+    ...(rescanned.matrix.length === 0
+      ? []
+      : [`The edit's resolve handed on ${JSON.stringify(rescanned.matrix)}, expected nothing.`]),
+    ...(rescanned.resolved.newDispatches === 1
+      ? []
+      : [`The rescan box started ${rescanned.resolved.newDispatches} runs, expected 1.`]),
+    ...(linedUpOpen?.states.join(",") === "queued"
+      ? []
+      : [
+          `Deployment record ${linedUp.record} has the statuses ${linedUpOpen?.states.join(", ")} after the edit's resolve, expected it left open as queued.`,
+        ]),
+  ]) && good;
+const linedUpResolve = await dispatchedJob(
+  "resolve",
+  linedUp.run,
+  LINED_UP_SHA,
+  `resolve, dispatched by the app for record ${linedUp.record}, after the edit's resolve`,
+);
+const linedUpEntry = matrixEntries(linedUpResolve.outputs.matrix ?? "")[0];
+const linedUpApply =
+  linedUpEntry === undefined
+    ? undefined
+    : await dispatchedJob(
+        "apply",
+        linedUp.run,
+        LINED_UP_SHA,
+        `apply of deployment record ${linedUpEntry.deployment}`,
+        { "deployment-id": String(linedUpEntry.deployment) },
+      );
+const linedUpSettle = await dispatchedJob("settle", linedUp.run, LINED_UP_SHA, "settle");
+fake.seedRun(linedUp.run.runId, { completed: true });
+good =
+  reportStep("The tick from the app that waited behind an edit: its resolve", linedUpResolve, [
+    ...(linedUpResolve.exitCode === 0
+      ? []
+      : [`resolve ended with exit code ${linedUpResolve.exitCode}.`]),
+    ...(linedUpEntry?.stack === "app:prod" && linedUpEntry.deployment === linedUp.record
+      ? []
+      : [
+          `The matrix output is ${linedUpResolve.outputs.matrix}, expected one entry that hands on deployment record ${linedUp.record} of app:prod.`,
+        ]),
+  ]) && good;
+good =
+  report("The tick from the app that waited behind an edit: apply and settle", [
+    ...(linedUpApply === undefined
+      ? ["resolve handed nothing on, so no apply ran."]
+      : checkApply(linedUpApply, {
+          stack: "app:prod",
+          deployment: linedUp.record,
+          outcome: "deployed",
+        })),
+    ...checkSettle(linedUpSettle, {
+      ended: undefined,
+      before: linedUpApply?.records ?? linedUpResolve.records,
+    }),
+    ...checkDeploys("app:prod", await deploysOf("app", "prod"), appDeploysBeforeLinedUp + 1),
+  ]) && good;
+
+// 17. A tick from the app whose dispatched resolve was cancelled (record
+// 0123), as by a person, or by GitHub before queue: max. Its resolve hands
+// nothing on, and settle, which now runs when resolve was cancelled, ends
+// the record and starts a full scan. That scan puts the failure line on the
+// row of app:prod, so the row does not stay deploying for ever.
+console.log("::group::A change to app:prod, for a tick from the app whose resolve is cancelled");
+edit("app/Pulumi.prod.yml", "app:tier: gold", "app:tier: silver");
+console.log("::endgroup::");
+const DROPPED_SHA = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+const beforeDropped = await scanStep(DROPPED_SHA, "schedule");
+const appDeploysBeforeDropped = await deploysOf("app", "prod");
+const dropped = await appTick("app:prod", DROPPED_SHA, dashboardBody(beforeDropped));
+const droppedBefore = records();
+const droppedSettle = await dispatchedJob(
+  "settle",
+  dropped.run,
+  DROPPED_SHA,
+  `settle, after the resolve of record ${dropped.record} was cancelled`,
+);
+fake.seedRun(dropped.run.runId, { completed: true });
+const afterDropped = await scanStep(DROPPED_SHA, "workflow_dispatch");
+good =
+  reportStep("A tick from the app whose resolve was cancelled: settle", droppedSettle, [
+    ...(beforeDropped.exitCode === 0
+      ? []
+      : [`The scan ended with exit code ${beforeDropped.exitCode}.`]),
+    ...checkSettle(droppedSettle, { ended: dropped.record, before: droppedBefore }),
+    ...(droppedSettle.log.includes(
+      `Ended the open deployment of app:prod (record ${dropped.record}): this run ended without a result for it.`,
+    )
+      ? []
+      : ["settle did not say in its log that it ended the record of app:prod."]),
+    ...checkDeploys("app:prod", await deploysOf("app", "prod"), appDeploysBeforeDropped),
+  ]) && good;
+good =
+  report("A tick from the app whose resolve was cancelled: the scan settle started", [
+    ...(afterDropped.exitCode === 0
+      ? []
+      : [`The scan ended with exit code ${afterDropped.exitCode}.`]),
+    // Pending again with the change, never deploying. The failure line is
+    // not checked, for the reason checkPendingAfterRefusal gives: the fake's
+    // record is older than the tool's own history of earlier scenes.
+    ...checkPendingAfterRefusal(dashboardBody(afterDropped), "app:prod"),
+  ]) && good;
 
 console.log("::group::The dashboard after the narrowed scan");
 console.log(dashboardBody(second));
