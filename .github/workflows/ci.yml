@@ -95,7 +95,7 @@ jobs:
         with:
           name: fixtures-${{ matrix.pulumi }}
           path: ${{ runner.temp }}/fixtures
-          retention-days: 7
+          retention-days: 3
           if-no-files-found: error
 
   fixtures-opentofu:
@@ -138,7 +138,7 @@ jobs:
         with:
           name: fixtures-opentofu-v${{ matrix.tofu }}
           path: ${{ runner.temp }}/fixtures
-          retention-days: 7
+          retention-days: 3
           if-no-files-found: error
 
   fixtures-terraform:
@@ -181,7 +181,7 @@ jobs:
         with:
           name: fixtures-terraform-v${{ matrix.terraform }}
           path: ${{ runner.temp }}/fixtures
-          retention-days: 7
+          retention-days: 3
           if-no-files-found: error
 
   fixtures-infracost:
@@ -237,7 +237,7 @@ jobs:
         with:
           name: fixtures-infracost-v${{ matrix.infracost }}
           path: ${{ runner.temp }}/fixtures
-          retention-days: 7
+          retention-days: 3
           if-no-files-found: error
 
   fixtures-terragrunt:
@@ -284,7 +284,7 @@ jobs:
         with:
           name: fixtures-terragrunt-${{ matrix.terragrunt }}
           path: ${{ runner.temp }}/fixtures
-          retention-days: 7
+          retention-days: 3
           if-no-files-found: error
 
   fixtures-cdktf:
@@ -335,7 +335,7 @@ jobs:
         with:
           name: fixtures-cdktf-v${{ matrix.cdktf }}
           path: ${{ runner.temp }}/fixtures
-          retention-days: 7
+          retention-days: 3
           if-no-files-found: error
 
   fixtures-helm:
@@ -396,7 +396,7 @@ jobs:
         with:
           name: fixtures-helm-${{ matrix.helm }}
           path: ${{ runner.temp }}/fixtures
-          retention-days: 7
+          retention-days: 3
           if-no-files-found: error
 
   fixtures-kubectl:
@@ -446,7 +446,7 @@ jobs:
         with:
           name: fixtures-kubectl-${{ matrix.kubectl }}
           path: ${{ runner.temp }}/fixtures
-          retention-days: 7
+          retention-days: 3
           if-no-files-found: error
 
   smoke:
