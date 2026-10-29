@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.50.2](https://github.com/sluiceway/sluiceway/compare/v0.50.1...v0.50.2) (2026-10-29)
+
+
+### Bug Fixes
+
+* bump zod to 4.6.6 for GHSA-mrhx-c7xc-m3w5 ([#316](https://github.com/sluiceway/sluiceway/issues/316)) ([cb46dc6](https://github.com/sluiceway/sluiceway/commit/cb46dc68becf11397e51a3decfe1b7c8d825d338))
+* **deps:** zod 4.6.6 for GHSA-mrhx-c7xc-m3w5 ([cb46dc6](https://github.com/sluiceway/sluiceway/commit/cb46dc68becf11397e51a3decfe1b7c8d825d338))
+
 ## [0.50.1](https://github.com/sluiceway/sluiceway/compare/v0.50.0...v0.50.1) (2026-10-28)
 
 
